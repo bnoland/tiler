@@ -2,42 +2,25 @@ import pygame as pg
 from player import Player
 from tile import Tile
 from map import Map
+from viewport import Viewport
 
 def main():
     pg.init()
 
-    # SCREEN_WIDTH = 800
-    # SCREEN_HEIGHT = 600
-    SCREEN_WIDTH = 640
-    SCREEN_HEIGHT = 480
+    SCREEN_WIDTH = 800
+    SCREEN_HEIGHT = 600
 
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    map = Map([
-        'xxxxxxxxxxxxxxxxxxxxxxxxx',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooxxoooooooooxxoooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xoooooxxooooooooxxxxxxxxx',
-        'xooooooooooooooooooooooox',
-        'xooooooooooxxxxxxooooooox',
-        'xooooooooooooooooooooooox',
-        'xooooooooooooooooooooooox',
-        'xxxxxxxxxxxxxxxxxxxxxxxxx',
-    ], (32, 30))
+    with open('map.txt') as f:
+        string_rep = [line.rstrip() for line in f]
+        map = Map(string_rep, (32, 32), (25, 50))
 
-    player = Player(screen, map.get_tile_group(), (100, 100))
-    players = pg.sprite.Group(player)
+    viewport = Viewport(screen, map)
+
+    player = map.get_player()
+    tiles = map.get_tiles()
+    sprites = tiles + [player]
 
     dt = 1  # Time delta per frame
 
@@ -61,8 +44,8 @@ def main():
 
         screen.fill((0, 0, 0))
 
-        players.draw(screen)
-        map.draw(screen)
+        viewport.update(player)
+        viewport.draw(sprites)
 
         pg.display.flip()
         clock.tick(30)

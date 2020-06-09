@@ -1,18 +1,15 @@
 import pygame as pg
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, screen, tiles, pos=(0, 0)):
+    def __init__(self, map, size, pos):
         super().__init__()
 
-        self.width, self.height = 25, 50
-        self.image = pg.Surface((self.width, self.height))
-        self.image.fill((255, 255, 255))
-        self.rect = self.image.get_rect(topleft=pos)
+        self.map = map
 
-        # TODO: This is for collision detection. Crude for now -- should be
-        # encapsulated # in some sort of "Game" object or something.
-        self.screen = screen
-        self.tiles = tiles
+        self.width, self.height = size
+        self.image = pg.Surface((self.width, self.height))
+        self.image.fill((0, 0, 255))
+        self.rect = self.image.get_rect(topleft=pos)
 
         self.x = self.rect.x
         self.y = self.rect.y
@@ -51,25 +48,6 @@ class Player(pg.sprite.Sprite):
         else:
             self.ax = 0
 
-    # def handle_collisions(self):
-    #     if self.x < 0:
-    #         self.x = 0
-    #         self.vx = 0
-    #         #self.ax = 0
-    #
-    #     if self.x > self.screen.get_width() - self.width:
-    #         self.x = self.screen.get_width() - self.width
-    #         self.vx = 0
-    #         #self.ax = 0
-    #
-    #     if self.y < 0:
-    #         self.y = 0
-    #         self.vy = 0
-    #
-    #     if self.y > self.screen.get_height() - self.height:
-    #         self.y = self.screen.get_height() - self.height
-    #         self.vy = 0
-
     def physics_step(self, dt):
         if self.on_surface:
             # Add friction when on a surface.
@@ -97,7 +75,7 @@ class Player(pg.sprite.Sprite):
 
         self.on_surface = False
 
-        for tile in self.tiles:
+        for tile in self.map.get_tiles():
             if self.rect.colliderect(tile.rect):
                 if dx > 0:    # Moving right, hit left of tile
                     self.rect.right = tile.rect.left
