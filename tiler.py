@@ -25,6 +25,10 @@ def main():
     tiles = map.get_tiles()
     sprites = tiles + [player]
 
+    bg_image = pg.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    bg_image.fill((0, 255, 0))
+    bg_rect = bg_image.get_rect(topleft=(0, round(0.75 * SCREEN_HEIGHT)))
+
     dt = 1  # Time delta per frame
 
     clock = pg.time.Clock()
@@ -47,11 +51,13 @@ def main():
 
         screen.fill((0, 0, 0))
 
+        screen.blit(bg_image, bg_rect)
+
         viewport.update(player)
         viewport.draw(sprites)
 
         pg.display.flip()
-        clock.tick(30)
+        clock.tick(60)
 
     pg.quit()
 

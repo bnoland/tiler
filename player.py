@@ -16,7 +16,7 @@ class Player(pg.sprite.Sprite):
         self.vx = 0
         self.vy = 0
         self.ax = 0
-        self.ay = 5  # TODO: Set world gravity
+        self.ay = 1.5  # TODO: Set world gravity
 
         # Allows for double-jumping, etc.
         self.jump_count = 0
@@ -30,18 +30,18 @@ class Player(pg.sprite.Sprite):
 
         if self.jump_count < self.max_jumps:
             self.jump_count += 1
-            self.vy = -40
+            self.vy = -20
 
     def handle_horizontal_movement(self, pressed_keys, mods):
         if pressed_keys[pg.K_LEFT] or pressed_keys[pg.K_RIGHT]:
             if self.on_surface:
                 if pressed_keys[pg.K_LEFT]:
-                    self.ax = -1.5
+                    self.ax = -0.75
                 elif pressed_keys[pg.K_RIGHT]:
-                    self.ax = 1.5
+                    self.ax = 0.75
                 if mods & pg.KMOD_SHIFT:
                     # Run when shift pressed.
-                    self.ax *= 2
+                    self.ax *= 1.5
             else:
                 # No horizontal acceleration when mid-air.
                 self.ax = 0

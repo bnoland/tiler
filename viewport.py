@@ -14,9 +14,9 @@ class Viewport:
     def update(self, sprite):
         new_center = [0, 0]
         new_center[0] = sprite.rect.center[0] + \
-            (self.rect.center[0] - sprite.rect.center[0]) / 1.2
+            (self.rect.center[0] - sprite.rect.center[0]) / 1.1
         new_center[1] = sprite.rect.center[1] + \
-            (self.rect.center[1] - sprite.rect.center[1]) / 1.2
+            (self.rect.center[1] - sprite.rect.center[1]) / 1.1
 
         self.rect.center = new_center
 
