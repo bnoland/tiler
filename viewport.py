@@ -12,7 +12,13 @@ class Viewport:
         return sprite.rect.move((-self.rect.x, -self.rect.y))
 
     def update(self, sprite):
-        self.rect.center = sprite.rect.center
+        new_center = [0, 0]
+        new_center[0] = sprite.rect.center[0] + \
+            (self.rect.center[0] - sprite.rect.center[0]) / 1.2
+        new_center[1] = sprite.rect.center[1] + \
+            (self.rect.center[1] - sprite.rect.center[1]) / 1.2
+
+        self.rect.center = new_center
 
         map_rect = self.map.get_rect()
         if self.rect.right > map_rect.right:

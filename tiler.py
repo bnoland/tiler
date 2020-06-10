@@ -7,8 +7,11 @@ from viewport import Viewport
 def main():
     pg.init()
 
-    SCREEN_WIDTH = 800
-    SCREEN_HEIGHT = 600
+    # SCREEN_WIDTH = 800
+    # SCREEN_HEIGHT = 600
+
+    SCREEN_WIDTH = 600
+    SCREEN_HEIGHT = 480
 
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
