@@ -1,21 +1,27 @@
 from PIL import Image, ImageFilter
-import random
+import random, math
 
-def random_gradient():
-    scale = 20
-    x, y = scale*(random.random()-0.5), scale*(random.random()-0.5)
+def random_gradient(magnitude):
+    theta = 2 * math.pi * random.random()
+    x, y = magnitude * math.cos(theta), magnitude * math.sin(theta)
     return x, y
 
-cell_width, cell_height = 10, 10
-n_horz_cells, n_vert_cells = 50, 50
+cell_width, cell_height = 20, 20
+n_horz_cells, n_vert_cells = 20, 20
+gradient_magnitude = 1
+
 gradients = {
-    (x, y): random_gradient()
+    (x, y): random_gradient(gradient_magnitude)
     # +1 for outside edges
     for x in range(n_horz_cells+1) for y in range(n_vert_cells+1)
 }
 
-def interpolate(x0, x1, t):
-    return t * x0 + (1 - t) * x1
+# import sys
+# for key in gradients: print(key, gradients[key])
+# sys.exit()
+
+def interpolate(x0, x1, w):
+    return w * x0 + (1 - w) * x1
 
 # TODO: Possible to have a tuple as a function argument?
 def dot(x0, y0, x1, y1):
@@ -26,31 +32,34 @@ def perlin(x, y):
     x0, y0 = int(x), int(y)
     x1, y1 = x0 + 1, y0 + 1
 
-    v00 = dot(x - x0, y - y0, *gradients[(x0, y0)])
-    v10 = dot(x - x1, y - y0, *gradients[(x1, y0)])
-    i0 = interpolate(v00, v10, x - x0)
+    s = dot(x - x0, y - y0, *gradients[(x0, y0)])
+    t = dot(x - x1, y - y0, *gradients[(x1, y0)])
+    u = dot(x - x0, y - y1, *gradients[(x0, y1)])
+    v = dot(x - x1, y - y1, *gradients[(x1, y1)])
 
-    v01 = dot(x - x0, y - y1, *gradients[(x0, y1)])
-    v11 = dot(x - x1, y - y1, *gradients[(x1, y1)])
-    i1 = interpolate(v01, v11, x - x0)
+    a = interpolate(s, t, x - x0)
+    b = interpolate(u, v, x - x0)
 
-    return interpolate(i0, i1, y - y0)
+    value = interpolate(a, b, y - y0)
+    return value
 
 width, height = n_horz_cells * cell_width, n_vert_cells * cell_height
-mode = 'RGB'  # TODO: grayscale
+mode = 'L'
 image = Image.new(mode, (width, height))
 
 pixels = image.load()
+
+sigmoid = lambda x: 1 / (1 + math.exp(-x))
 
 for x in range(width):
     for y in range(height):
         cell_x = x / cell_width
         cell_y = y / cell_height
-        perlin_val = round(perlin(cell_x, cell_y) * 255)
-        pixel = (perlin_val, perlin_val, perlin_val)
-        # print(pixel)
+        perlin_val = perlin(cell_x, cell_y)
+        # print(perlin_val)
+        pixel = round(perlin_val * 255)  # TODO: need some scaling
         pixels[x, y] = pixel
 
-image = image.filter(ImageFilter.GaussianBlur(radius=10))
+#image = image.filter(ImageFilter.GaussianBlur(radius=10))
 
 image.show()
