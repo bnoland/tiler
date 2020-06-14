@@ -1,41 +1,38 @@
-from PIL import Image, ImageFilter
 import random, math
+import numpy as np
+from scipy.stats import uniform
+from imageio import imwrite
 
-def random_gradient(magnitude):
-    theta = 2 * math.pi * random.random()
-    x, y = magnitude * math.cos(theta), magnitude * math.sin(theta)
-    return x, y
+def random_vector(magnitude):
+    theta = uniform.rvs(0, 2 * np.pi)
+    x, y = magnitude * np.cos(theta), magnitude * np.sin(theta)
+    return np.array([x, y], dtype=float)
 
 cell_width, cell_height = 20, 20
-n_horz_cells, n_vert_cells = 20, 20
+n_horz_cells, n_vert_cells = 20, 30
 gradient_magnitude = 1
 
-gradients = {
-    (x, y): random_gradient(gradient_magnitude)
-    # +1 for outside edges
-    for x in range(n_horz_cells+1) for y in range(n_vert_cells+1)
-}
-
-# import sys
-# for key in gradients: print(key, gradients[key])
-# sys.exit()
+# +1 for edge nodes
+gradients = np.empty([n_horz_cells+1, n_vert_cells+1, 2], dtype=float)
+for i in range(gradients.shape[0]):
+    for j in range(gradients.shape[1]):
+        gradients[i, j] = random_vector(gradient_magnitude)
 
 def interpolate(x0, x1, w):
-    return w * x0 + (1 - w) * x1
-
-# TODO: Possible to have a tuple as a function argument?
-def dot(x0, y0, x1, y1):
-    return x0 * x1 + y0 * y1
+    return x0 + w * (x1 - x0)
 
 def perlin(x, y):
+    x = x / cell_width
+    y = y / cell_height
+
     # Compute cell edges.
     x0, y0 = int(x), int(y)
     x1, y1 = x0 + 1, y0 + 1
 
-    s = dot(x - x0, y - y0, *gradients[(x0, y0)])
-    t = dot(x - x1, y - y0, *gradients[(x1, y0)])
-    u = dot(x - x0, y - y1, *gradients[(x0, y1)])
-    v = dot(x - x1, y - y1, *gradients[(x1, y1)])
+    s = np.dot((x - x0, y - y0), gradients[x0, y0])
+    t = np.dot((x - x1, y - y0), gradients[x1, y0])
+    u = np.dot((x - x0, y - y1), gradients[x0, y1])
+    v = np.dot((x - x1, y - y1), gradients[x1, y1])
 
     a = interpolate(s, t, x - x0)
     b = interpolate(u, v, x - x0)
@@ -44,22 +41,13 @@ def perlin(x, y):
     return value
 
 width, height = n_horz_cells * cell_width, n_vert_cells * cell_height
-mode = 'L'
-image = Image.new(mode, (width, height))
-
-pixels = image.load()
-
-sigmoid = lambda x: 1 / (1 + math.exp(-x))
-
+image_buffer = np.empty([width, height], dtype=float)
 for x in range(width):
     for y in range(height):
-        cell_x = x / cell_width
-        cell_y = y / cell_height
-        perlin_val = perlin(cell_x, cell_y)
-        # print(perlin_val)
-        pixel = round(perlin_val * 255)  # TODO: need some scaling
-        pixels[x, y] = pixel
+        image_buffer[x, y] = perlin(x, y)
 
-#image = image.filter(ImageFilter.GaussianBlur(radius=10))
+image_buffer = image_buffer - image_buffer.min()
+image_buffer = image_buffer / image_buffer.ptp()
+image_buffer = np.around(255 * image_buffer).astype(np.uint8)
 
-image.show()
+imwrite('test.png', image_buffer, format='png')
