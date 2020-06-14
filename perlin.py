@@ -21,6 +21,9 @@ for i in range(gradients.shape[0]):
 def interpolate(x0, x1, w):
     return x0 + w * (x1 - x0)
 
+def ease_function(t):
+    return 3 * t**2 - 2 * t**3
+
 def perlin(x, y):
     x = x / cell_width
     y = y / cell_height
@@ -34,10 +37,12 @@ def perlin(x, y):
     u = np.dot((x - x0, y - y1), gradients[x0, y1])
     v = np.dot((x - x1, y - y1), gradients[x1, y1])
 
-    a = interpolate(s, t, x - x0)
-    b = interpolate(u, v, x - x0)
+    w = ease_function(x - x0)
+    a = interpolate(s, t, w)
+    b = interpolate(u, v, w)
 
-    value = interpolate(a, b, y - y0)
+    w = ease_function(y - y0)
+    value = interpolate(a, b, w)
     return value
 
 width, height = n_horz_cells * cell_width, n_vert_cells * cell_height
