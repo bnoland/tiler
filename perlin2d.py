@@ -37,7 +37,8 @@ def perlin_point_2d(x, y, cell_width, cell_height, gradients):
 
 # NOTE: For now, cell_width and cell_height *must* evenly divide width and
 # height, respectively.
-def perlin_noise_2d(width, height, cell_width, cell_height):
+def perlin_noise_2d(width, height, cell_width, cell_height,
+                    fade_edges=False, fade_offset=1):
     n_horz_cells, n_vert_cells = width // cell_width, height // cell_height
 
     # +1 for edge nodes
@@ -45,6 +46,24 @@ def perlin_noise_2d(width, height, cell_width, cell_height):
     for i in range(gradients.shape[0]):
         for j in range(gradients.shape[1]):
             gradients[i, j] = random_vector_2d(magnitude=1)
+            if fade_edges:
+                gradient = np.array([0, 0])
+                intensity = 1
+                faded = False
+                if i < fade_offset:
+                    gradient[0] += intensity
+                    faded = True
+                elif i > gradients.shape[0]-fade_offset-1:
+                    gradient[0] -= intensity
+                    faded = True
+                if j < fade_offset:
+                    gradient[1] += intensity
+                    faded = True
+                elif j > gradients.shape[1]-fade_offset-1:
+                    gradient[1] -= intensity
+                    faded = True
+                if faded:
+                    gradients[i, j] = gradient
 
     image_buffer = np.empty([height, width], dtype=float)
     for y in range(height):
@@ -61,20 +80,21 @@ def normalize_image_buffer(image_buffer):
     return image_buffer
 
 # NOTE: size is assumed to be a power of 2 for now.
-def turbulence_2d(size):
+def turbulence_2d(size, fade_edges=False):
     cell_size = 1
     image_buffer = np.zeros([size, size])
     while cell_size < size:
         cell_size *= 2
         weight = cell_size
         image_buffer += perlin_noise_2d(
-            size, size, cell_size, cell_size) * weight
+            size, size, cell_size, cell_size,
+            fade_edges=fade_edges, fade_offset=1) * weight
 
     return image_buffer
 
 # NOTE: size is assumed to be a power of 2 for now.
-def cloud_2d(size):
-    image_buffer = turbulence_2d(size)
+def cloud_2d(size, fade_edges=False):
+    image_buffer = turbulence_2d(size, fade_edges)
     image_buffer = normalize_image_buffer(image_buffer)
     return image_buffer
 
@@ -97,5 +117,9 @@ def marble_2d(size):
 
 if __name__ == '__main__':
     size = 256
-    imwrite('cloud.png', cloud_2d(size), format='png')
-    imwrite('marble.png', marble_2d(size), format='png')
+    cell_size = 4
+    imwrite('cloud.png', cloud_2d(size, fade_edges=True), format='png')
+    # imwrite('marble.png', marble_2d(size), format='png')
+    # image_buffer = normalize_image_buffer(
+    #     perlin_noise_2d(size, size, cell_size, cell_size))
+    # imwrite('perlin.png', image_buffer,format='png')
