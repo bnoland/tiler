@@ -80,18 +80,47 @@ def normalize_buffer(buffer):
     buffer = np.around(255 * buffer).astype(np.uint8)
     return buffer
 
+# NOTE: size is assumed to be a power of 2 for now.
 def turbulence_3d(size):
-    pass
+    cell_size = 1
+    buffer = np.zeros([size, size, size])
+    while cell_size < size:
+        cell_size *= 2
+        weight = cell_size
+        buffer += perlin_noise_3d(
+            size, size, size, cell_size, cell_size, cell_size) * weight
 
+    return buffer
+
+# NOTE: size is assumed to be a power of 2 for now.
 def cloud_3d(size):
-    pass
+    buffer = turbulence_3d(size)
+    buffer = normalize_buffer(buffer)
+    return buffer
 
+# NOTE: size is assumed to be a power of 2 for now.
 def marble_3d(size):
-    pass
+    x_period, y_period, z_period = 5, 10, size
+
+    x = np.broadcast_to(np.arange(size), [size, size, size])
+    x = 2 * np.pi * x * x_period / size
+
+    y = np.broadcast_to(np.arange(size)[:, np.newaxis], [size, size, size])
+    y = 2 * np.pi * y * y_period / size
+
+    z = np.broadcast_to(
+        np.arange(size)[:, np.newaxis, np.newaxis], [size, size, size])
+    z = 2 * np.pi * z * z_period / size
+
+    buffer = x + y + z
+    buffer = np.sin(x + y + z + 0.3*turbulence_3d(size))
+    # buffer = np.sin(x + y + z)
+    buffer = normalize_buffer(buffer)
+    return buffer
 
 if __name__ == '__main__':
-    size = 256
-    cell_size = 8
-    buffer = perlin_noise_3d(size, size, size, cell_size, cell_size, cell_size)
-    buffer = normalize_buffer(buffer)
-    mimsave('test.gif', list(buffer))
+    size = 128
+    # cell_size = 4
+    # buffer = perlin_noise_3d(size, size, size, cell_size, cell_size, cell_size)
+    buffer = marble_3d(size)
+    mimsave('marble.gif', list(buffer))
