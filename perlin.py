@@ -52,23 +52,49 @@ def perlin_noise(width, height, cell_width, cell_height):
             image_buffer[y, x] = perlin_point(
                 x, y, cell_width, cell_height, gradients)
 
+    return image_buffer
+
+def normalize_image_buffer(image_buffer):
     image_buffer = image_buffer - image_buffer.min()
     image_buffer = image_buffer / image_buffer.ptp()
     image_buffer = np.around(255 * image_buffer).astype(np.uint8)
+    return image_buffer
+
+# NOTE: size is assumed to be a power of 2 for now.
+def turbulence(size):
+    cell_size = 1
+    image_buffer = np.zeros([size, size])
+    while cell_size < size:
+        cell_size *= 2
+        weight = cell_size
+        image_buffer += perlin_noise(size, size, cell_size, cell_size) * weight
 
     return image_buffer
 
-max_k = 8
-size = 2 ** max_k
-image_buffers = np.empty([size, size, max_k], dtype=np.uint8)
-for k in range(1, max_k+1):
-    cell_size = 2 ** k
-    image_buffers[..., k-1] = perlin_noise(size, size, cell_size, cell_size)
-    imwrite('test{}.png'.format(k), image_buffers[..., k-1], format='png')
+# NOTE: size is assumed to be a power of 2 for now.
+def cloud(size):
+    image_buffer = turbulence(size)
+    image_buffer = normalize_image_buffer(image_buffer)
+    return image_buffer
 
-# Quick n' dirty test.
-image_buffer = np.zeros([size, size])
-for k in range(1, max_k+1):
-    image_buffer += image_buffers[..., k-1] / (2 ** (max_k-k+1))
-image_buffer = image_buffer.astype(np.uint8)
-imwrite('test.png', image_buffer, format='png')
+# NOTE: size is assumed to be a power of 2 for now.
+def marble(size):
+    x_period, y_period = 5, 10
+
+    x = np.broadcast_to(np.arange(size), [size, size])
+    x = 2 * np.pi * x * x_period / size
+
+    y = np.broadcast_to(np.arange(size)[:, np.newaxis], [size, size])
+    y = 2 * np.pi * y * y_period / size
+
+    image_buffer = x + y
+
+    image_buffer = np.sin(image_buffer + 0.3*turbulence(size))
+    # image_buffer = np.sin(image_buffer)
+    image_buffer = normalize_image_buffer(image_buffer)
+    return image_buffer
+
+if __name__ == '__main__':
+    size = 256
+    imwrite('cloud.png', cloud(size), format='png')
+    imwrite('marble.png', marble(size), format='png')
