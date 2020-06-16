@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from scipy.stats import uniform
-from imageio import imwrite
+from imageio import imwrite, mimsave
 
 def random_vector_2d(magnitude):
     theta = uniform.rvs(0, 2 * np.pi)
@@ -37,8 +37,7 @@ def perlin_point_2d(x, y, cell_width, cell_height, gradients):
 
 # NOTE: For now, cell_width and cell_height *must* evenly divide width and
 # height, respectively.
-def perlin_noise_2d(width, height, cell_width, cell_height,
-                    fade_edges=False, fade_offset=1):
+def perlin_noise_2d(width, height, cell_width, cell_height):
     n_horz_cells, n_vert_cells = width // cell_width, height // cell_height
 
     # +1 for edge nodes
@@ -46,24 +45,6 @@ def perlin_noise_2d(width, height, cell_width, cell_height,
     for i in range(gradients.shape[0]):
         for j in range(gradients.shape[1]):
             gradients[i, j] = random_vector_2d(magnitude=1)
-            if fade_edges:
-                gradient = np.array([0, 0])
-                intensity = 1
-                faded = False
-                if i < fade_offset:
-                    gradient[0] += intensity
-                    faded = True
-                elif i > gradients.shape[0]-fade_offset-1:
-                    gradient[0] -= intensity
-                    faded = True
-                if j < fade_offset:
-                    gradient[1] += intensity
-                    faded = True
-                elif j > gradients.shape[1]-fade_offset-1:
-                    gradient[1] -= intensity
-                    faded = True
-                if faded:
-                    gradients[i, j] = gradient
 
     image_buffer = np.empty([height, width], dtype=float)
     for y in range(height):
@@ -80,21 +61,20 @@ def normalize_image_buffer(image_buffer):
     return image_buffer
 
 # NOTE: size is assumed to be a power of 2 for now.
-def turbulence_2d(size, fade_edges=False):
+def turbulence_2d(size):
     cell_size = 1
     image_buffer = np.zeros([size, size])
     while cell_size < size:
         cell_size *= 2
         weight = cell_size
         image_buffer += perlin_noise_2d(
-            size, size, cell_size, cell_size,
-            fade_edges=fade_edges, fade_offset=1) * weight
+            size, size, cell_size, cell_size) * weight
 
     return image_buffer
 
 # NOTE: size is assumed to be a power of 2 for now.
-def cloud_2d(size, fade_edges=False):
-    image_buffer = turbulence_2d(size, fade_edges)
+def cloud_2d(size):
+    image_buffer = turbulence_2d(size)
     image_buffer = normalize_image_buffer(image_buffer)
     return image_buffer
 
@@ -115,11 +95,25 @@ def marble_2d(size):
     image_buffer = normalize_image_buffer(image_buffer)
     return image_buffer
 
+# NOTE: size is assumed to be a power of 2 for now.
+def wavy(size):
+    buffer = np.zeros([size, size, size])
+    slices = turbulence_2d(size)
+    # cell_size = size // 2
+    # slices = perlin_noise_2d(size, size, cell_size, cell_size)
+    slices = normalize_image_buffer(slices) / 255
+    for i, slice in enumerate(slices):
+        heights = np.around(size * slice / 10).astype(int) + size // 2
+        cols = []
+        for h in heights:
+            col = np.r_[np.zeros(size - h), np.ones(h)].reshape(-1, 1)
+            cols.append(col)
+        buffer[i] = np.hstack(cols)
+    buffer = 255 * buffer.astype(np.uint8)
+    return buffer
+
 if __name__ == '__main__':
-    size = 256
-    cell_size = 4
-    imwrite('cloud.png', cloud_2d(size, fade_edges=True), format='png')
-    # imwrite('marble.png', marble_2d(size), format='png')
-    # image_buffer = normalize_image_buffer(
-    #     perlin_noise_2d(size, size, cell_size, cell_size))
-    # imwrite('perlin.png', image_buffer,format='png')
+    size = 512
+    # imwrite('cloud.png', cloud_2d(size), format='png')
+    # imwrite('wavy.png', wavy(size)[0], format='png')
+    mimsave('wavy.gif', list(wavy(size)), fps=60)
