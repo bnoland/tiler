@@ -2,6 +2,8 @@ import math
 import numpy as np
 from scipy.stats import uniform
 from imageio import imwrite, mimsave
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
 
 def random_vector_2d(magnitude):
     theta = uniform.rvs(0, 2 * np.pi)
@@ -113,7 +115,20 @@ def wavy(size):
     return buffer
 
 if __name__ == '__main__':
-    size = 512
-    # imwrite('cloud.png', cloud_2d(size), format='png')
-    # imwrite('wavy.png', wavy(size)[0], format='png')
-    mimsave('wavy.gif', list(wavy(size)), fps=60)
+    # Demo using matplotlib colormaps.
+
+    size = 256
+
+    copper = cm.get_cmap('copper', 256)
+    image_buffer = (copper(marble_2d(size) / 255) * 255).astype(np.uint8)
+    imwrite('marble_color.png', image_buffer, format='png')
+
+    vals = np.ones([256, 4])
+    vals[:, 0] = np.linspace(135/255, 1, 256)
+    vals[:, 1] = np.linspace(206/255, 1, 256)
+    vals[:, 2] = np.linspace(235/255, 1, 256)
+    cmp = ListedColormap(vals)
+    image_buffer = (cmp(cloud_2d(size) / 255) * 255).astype(np.uint8)
+    imwrite('cloud_color.png', image_buffer, format='png')
+
+    # mimsave('wavy.gif', list(wavy(size)), fps=60)
