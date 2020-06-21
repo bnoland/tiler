@@ -1,5 +1,5 @@
 import pygame as pg
-from tile import Tile
+from tile import Tile, EarthTile, IceTile
 from player import Player
 
 class Map:
@@ -25,18 +25,40 @@ class Map:
         return self.player
 
     def _build_from_string(self, string_rep):
+        friction = 0.1  # Tile friction
+
         for i, row in enumerate(string_rep):
             for j, col in enumerate(row):
                 x, y = self.tile_width * j, self.tile_height * i
-                if col == 'x':
+                if col == 'p':
+                    self.player = Player(self, self.player_size, (x, y))
+                elif col != ' ':
+                    # It's a tile.
                     bounds = (
                         x, y,
                         self.tile_width, self.tile_height
                     )
-                    new_tile = Tile(bounds)
+                    # Earth tiles
+                    if col == '0':
+                        new_tile = EarthTile(bounds=bounds, type='block')
+                    elif col == '1':
+                        new_tile = EarthTile(bounds=bounds, type='left_ramp')
+                    elif col == '2':
+                        new_tile = EarthTile(bounds=bounds, type='right_ramp')
+                    # Ice tiles
+                    elif col == '3':
+                        new_tile = IceTile(bounds=bounds, type='block')
+                    elif col == '4':
+                        new_tile = IceTile(bounds=bounds, type='left_ramp')
+                    elif col == '5':
+                        new_tile = IceTile(bounds=bounds, type='right_ramp')
+                    else:
+                        # Invalid tile.
+                        pass
                     self.tile_list.append(new_tile)
-                elif col == 'p':
-                    self.player = Player(self, self.player_size, (x, y))
+                else:
+                    # Invalid specification.
+                    pass
 
     def get_tiles(self):
         return self.tile_list

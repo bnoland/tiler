@@ -40,10 +40,9 @@ def main():
     dt = 1  # Time delta per frame
 
     clock = pg.time.Clock()
-
+    
     running = True
     while running:
-        # TODO: Can't seem to gracefully quit loop based on user input...
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:

@@ -1,20 +1,20 @@
-xxxxxxxxxxxxxxxxxxxxxxxxx
-x                       x
-x                       x
-x                       x
-x       xxxxxxx         x
-x                       x
-x                       x
-x                       x
-x    xx         xx      x
-x                       x
-x                       x
-x     xxxx              x
-x                       x
-x                       x
-x                    xxxx
-x                       x
-x     xxxxxxxxxxx       x
-x                       x
-x  p                    x
-xxxxxxxxxxxxxxxxxxxxxxxxx
+0000000000000000000000000
+0                       0
+0                       0
+0                       0
+0       0000000         0
+0                       0
+0                       0
+0                       0
+0    00         00      0
+0                       0
+0                       0
+0                       0
+0                       0
+0                       0
+0                    0000
+0                       0
+0       20      53      0
+0     p200     533      0
+0     2000    5333      0
+0000000000000000000333000
