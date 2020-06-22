@@ -17,7 +17,7 @@ def main():
 
     with open('map.txt') as f:
         string_rep = [line.rstrip() for line in f]
-        map = Map(string_rep, (32, 32), (25, 50))
+        map = Map(string_rep, (32, 32), (25, 50), 1.5)
 
     viewport = Viewport(screen, map)
 
@@ -40,9 +40,14 @@ def main():
     dt = 1  # Time delta per frame
 
     clock = pg.time.Clock()
-    
+
     running = True
     while running:
+        pressed_keys = pg.key.get_pressed()
+        mods = pg.key.get_mods()
+        player.handle_horizontal_movement(pressed_keys, mods)
+        player.physics_step(dt)
+
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
@@ -51,11 +56,6 @@ def main():
                     player.jump()
             elif event.type == pg.QUIT:
                 running = False
-
-        pressed_keys = pg.key.get_pressed()
-        mods = pg.key.get_mods()
-        player.handle_horizontal_movement(pressed_keys, mods)
-        player.physics_step(dt)
 
         screen.fill((0, 0, 0))
 

@@ -41,7 +41,7 @@ class Tile(pg.sprite.Sprite):
 
 class EarthTile(Tile):
     def __init__(self, bounds, type='block'):
-        super().__init__(bounds, 0.1, type)
+        super().__init__(bounds, 0.9, type)
 
 class IceTile(Tile):
     def __init__(self, bounds, type='block'):

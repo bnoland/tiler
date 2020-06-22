@@ -3,12 +3,13 @@ from tile import Tile, EarthTile, IceTile
 from player import Player
 
 class Map:
-    def __init__(self, string_rep, tile_size, player_size):
+    def __init__(self, string_rep, tile_size, player_size, gravity):
         super().__init__()
         self.tile_list = []
         self.tile_width, self.tile_height = tile_size
 
         self.player_size = player_size
+        self.gravity = gravity
 
         # TODO: Rather crude width/height calculations based on string
         # representation.
@@ -23,6 +24,9 @@ class Map:
 
     def get_player(self):
         return self.player
+
+    def get_gravity(self):
+        return self.gravity
 
     def _build_from_string(self, string_rep):
         friction = 0.1  # Tile friction
