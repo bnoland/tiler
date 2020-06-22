@@ -28,8 +28,8 @@ class Player(pg.sprite.Sprite):
         self.y = self.rect.y
         self.vx = 0
         self.vy = 0
-        self.ax = 0
-        self.ay = self.gravity
+        # self.ax = 0
+        # self.ay = self.gravity
 
         # Allows for double-jumping, etc.
         self.jump_count = 0
@@ -38,13 +38,10 @@ class Player(pg.sprite.Sprite):
         self.standing_tile = None  # Tile currently standing on
 
     def jump(self):
-        # print('jump {}'.format(self.jump_count))
         if self.on_surface():
-            # print('on surface')
             self.jump_count = 0
 
         if self.jump_count < self.max_jumps:
-            # print('jump {}'.format(self.jump_count))
             self.jump_count += 1
             self.vy = -20
 
@@ -55,8 +52,8 @@ class Player(pg.sprite.Sprite):
         return abs(self.vx) > 0 or abs(self.vy) > 0
         # return self.speed() > 0
 
-    # def speed(self):
-    #     return math.sqrt(self.vx**2 + self.vy**2)
+    def speed(self):
+        return math.sqrt(self.vx**2 + self.vy**2)
 
     def handle_horizontal_movement(self, pressed_keys, mods):
         if pressed_keys[pg.K_LEFT] or pressed_keys[pg.K_RIGHT]:
@@ -72,55 +69,29 @@ class Player(pg.sprite.Sprite):
     def physics_step(self, dt):
         # print(self.vx, self.vy)
 
-        # if self.on_surface():
-        #     self.vx += -self.vx * dt * 0.9
-
         if self.on_surface():
             tile_type = self.standing_tile.get_type()
             friction = self.standing_tile.get_friction()
 
             if tile_type == 'block':
                 self.vx += friction * -self.vx * dt
-                # self.ax = 0
-                # self.ay = self.gravity
-                #
-                # # TODO: This seems to work pretty well as long as the friction
-                # # value is kept fairly small.
-                # if self.is_moving() > 0:
-                #     # Only apply friction when moving along surface.
-                #     vx_sign = sgn(self.vx)
-                #     self.ax = -vx_sign * friction * self.gravity
-                #     new_vx_sign = sgn(self.vx + dt * self.ax)
-                #     print(vx_sign, new_vx_sign)
-                #     if vx_sign == -new_vx_sign:
-                #         # If the friction force would cause the player to start
-                #         # moving in the opposite direction, stop applying
-                #         # friction.
-                #         self.ax = 0
-
+                self.vy += self.gravity * dt
             elif tile_type == 'left_ramp':
                 pass
-
             elif tile_type == 'right_ramp':
                 theta = math.pi / 180 * 45
                 N = -self.gravity * math.cos(theta)
-
                 self.vx += N * math.sin(theta) * dt
                 self.vy += self.gravity + N * math.cos(theta) * dt
-
-                # if self.is_moving() > 0:
-                #     # Only apply friction when moving along surface.
-                #     pass
+                # speed = self.speed()
+                # sign = sgn(self.vx)
+                # self.vx += -sign * friction * speed * math.cos(theta) * dt
+                # self.vy += sign * friction * speed * math.sin(theta) * dt
             else:
                 # Invalid tile type.
                 pass
         else:
-            # self.ax = 0
-            # self.ay = self.gravity
             self.vy += self.gravity * dt
-
-        # self.vx += dt * self.ax
-        # self.vy += dt * self.ay
 
         dx = self.vx * dt
         dy = self.vy * dt

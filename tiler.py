@@ -37,7 +37,9 @@ def main():
     cloud_image2.fill((120, 120, 120))
     cloud_rect2 = cloud_image2.get_rect(topleft=(300, 50))
 
-    dt = 1  # Time delta per frame
+    # TODO: If too small, can mess up collision detection. Could rectify by
+    # increasing gravity to compensate.
+    dt = 1.0  # Time delta per frame
 
     clock = pg.time.Clock()
 
@@ -47,6 +49,8 @@ def main():
         mods = pg.key.get_mods()
         player.handle_horizontal_movement(pressed_keys, mods)
         player.physics_step(dt)
+
+        print(player.standing_tile)
 
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
