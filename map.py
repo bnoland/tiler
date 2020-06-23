@@ -29,8 +29,8 @@ class Map:
         return self.gravity
 
     def _build_from_string(self, string_rep):
-        friction = 0.1  # Tile friction
-
+        is_not_tile = lambda c: c == 'p' or c == ' '
+        
         for i, row in enumerate(string_rep):
             for j, col in enumerate(row):
                 x, y = self.tile_width * j, self.tile_height * i
@@ -42,23 +42,46 @@ class Map:
                         x, y,
                         self.tile_width, self.tile_height
                     )
+
+                    # Quick n' dirty automated collision point generation.
+                    collision_points = []
+                    if i > 0:
+                        if is_not_tile(string_rep[i-1][j]):
+                            collision_points.append('top')
+                    if i < len(string_rep)-1:
+                        if is_not_tile(string_rep[i+1][j]):
+                            collision_points.append('bottom')
+                    if j > 0:
+                        if is_not_tile(string_rep[i][j-1]):
+                            collision_points.append('left')
+                    if j < len(row)-1:
+                        if is_not_tile(string_rep[i][j+1]):
+                            collision_points.append('right')
+
                     # Earth tiles
                     if col == '0':
-                        new_tile = EarthTile(bounds=bounds, type='block')
+                        new_tile = EarthTile(bounds=bounds, type='block',
+                            collision_points=collision_points)
                     elif col == '1':
-                        new_tile = EarthTile(bounds=bounds, type='left_ramp')
+                        new_tile = EarthTile(bounds=bounds, type='left_ramp',
+                            collision_points=collision_points)
                     elif col == '2':
-                        new_tile = EarthTile(bounds=bounds, type='right_ramp')
+                        new_tile = EarthTile(bounds=bounds, type='right_ramp',
+                            collision_points=collision_points)
                     # Ice tiles
                     elif col == '3':
-                        new_tile = IceTile(bounds=bounds, type='block')
+                        new_tile = IceTile(bounds=bounds, type='block',
+                            collision_points=collision_points)
                     elif col == '4':
-                        new_tile = IceTile(bounds=bounds, type='left_ramp')
+                        new_tile = IceTile(bounds=bounds, type='left_ramp',
+                            collision_points=collision_points)
                     elif col == '5':
-                        new_tile = IceTile(bounds=bounds, type='right_ramp')
+                        new_tile = IceTile(bounds=bounds, type='right_ramp',
+                            collision_points=collision_points)
                     else:
                         # Invalid tile.
                         pass
+
                     self.tile_list.append(new_tile)
                 else:
                     # Invalid specification.

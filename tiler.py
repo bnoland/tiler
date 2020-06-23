@@ -37,7 +37,7 @@ def main():
     cloud_image2.fill((120, 120, 120))
     cloud_rect2 = cloud_image2.get_rect(topleft=(300, 50))
 
-    # TODO: If too small, can mess up collision detection. Could rectify by
+    # TODO: If too small, can mess up collision detection. Could "rectify" by
     # increasing gravity to compensate.
     dt = 1.0  # Time delta per frame
 
@@ -45,12 +45,9 @@ def main():
 
     running = True
     while running:
-        pressed_keys = pg.key.get_pressed()
-        mods = pg.key.get_mods()
-        player.handle_horizontal_movement(pressed_keys, mods)
-        player.physics_step(dt)
-
-        print(player.standing_tile)
+        print(player.vx, player.vy)
+        # if not player.on_surface():
+        #     print('off surface', player.vx, player.vy)
 
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
@@ -60,6 +57,13 @@ def main():
                     player.jump()
             elif event.type == pg.QUIT:
                 running = False
+
+        pressed_keys = pg.key.get_pressed()
+        mods = pg.key.get_mods()
+        player.handle_horizontal_movement(pressed_keys, mods)
+        player.physics_step(dt)
+
+        # print(player.standing_tile)
 
         screen.fill((0, 0, 0))
 

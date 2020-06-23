@@ -58,16 +58,22 @@ class Player(pg.sprite.Sprite):
     def handle_horizontal_movement(self, pressed_keys, mods):
         if pressed_keys[pg.K_LEFT] or pressed_keys[pg.K_RIGHT]:
             if self.on_surface():
+                # TODO: Need to account for surface friction.
                 if pressed_keys[pg.K_LEFT]:
-                    self.vx = -6
+                    self.vx += -6
                 elif pressed_keys[pg.K_RIGHT]:
-                    self.vx = 6
+                    self.vx += 6
                 if mods & pg.KMOD_SHIFT:
                     # Run when shift pressed.
                     self.vx *= 1.5
 
     def physics_step(self, dt):
-        # print(self.vx, self.vy)
+        # TODO: Need to calibrate order of movement and calculation of forces on
+        # player.
+
+        dx = self.vx * dt
+        dy = self.vy * dt
+        self.move(dx, dy)
 
         if self.on_surface():
             tile_type = self.standing_tile.get_type()
@@ -77,25 +83,26 @@ class Player(pg.sprite.Sprite):
                 self.vx += friction * -self.vx * dt
                 self.vy += self.gravity * dt
             elif tile_type == 'left_ramp':
+                # TODO: Implement.
                 pass
             elif tile_type == 'right_ramp':
                 theta = math.pi / 180 * 45
-                N = -self.gravity * math.cos(theta)
-                self.vx += N * math.sin(theta) * dt
-                self.vy += self.gravity + N * math.cos(theta) * dt
-                # speed = self.speed()
-                # sign = sgn(self.vx)
-                # self.vx += -sign * friction * speed * math.cos(theta) * dt
-                # self.vy += sign * friction * speed * math.sin(theta) * dt
+                normal = self.gravity * math.cos(theta)
+                slide = self.gravity * math.sin(theta)
+                self.vy += normal * math.cos(theta) * dt
+                self.vx += -slide * math.sin(theta) * dt
+                self.vy += -slide * math.cos(theta) * dt
+                self.vx += friction * -self.vx * dt
+                self.vy += friction * -self.vy * dt
             else:
                 # Invalid tile type.
                 pass
         else:
             self.vy += self.gravity * dt
 
-        dx = self.vx * dt
-        dy = self.vy * dt
-        self.move(dx, dy)
+        # dx = self.vx * dt
+        # dy = self.vy * dt
+        # self.move(dx, dy)
 
     def move(self, dx, dy):
         self.move_single_axis(dx, 0)
@@ -112,18 +119,20 @@ class Player(pg.sprite.Sprite):
 
         for tile in self.map.get_tiles():
             if self.rect.colliderect(tile.rect):
+                collision_points = tile.get_collison_points()
+
                 if tile.get_type() == 'block':
-                    if dx > 0:
+                    if 'left' in collision_points and dx > 0:
                         self.rect.right = tile.rect.left
                         self.vx = 0
-                    elif dx < 0:
+                    elif 'right' in collision_points and dx < 0:
                         self.rect.left = tile.rect.right
                         self.vx = 0
-                    if dy > 0:
+                    if 'top' in collision_points and dy > 0:
                         self.rect.bottom = tile.rect.top
                         self.vy = 0
                         self.standing_tile = tile
-                    elif dy < 0:
+                    elif 'bottom' in collision_points and dy < 0:
                         self.rect.top = tile.rect.bottom
                         self.vy = 0
                 elif tile.get_type() == 'left_ramp':
@@ -133,10 +142,10 @@ class Player(pg.sprite.Sprite):
                     if self.rect.bottom >= tile.rect.bottom - \
                         (self.rect.right - tile.rect.left) and \
                         self.rect.right <= tile.rect.right:
-                        if dy < 0:
+                        if 'bottom' in collision_points and dy < 0:
                             self.rect.top = tile.rect.bottom
                             self.vy = 0
-                        elif dy > 0:
+                        elif 'top' in collision_points and dy > 0:
                             self.rect.bottom = tile.rect.bottom - \
                                 (self.rect.right - tile.rect.left)
                             self.vy = 0
