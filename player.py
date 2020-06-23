@@ -48,13 +48,6 @@ class Player(pg.sprite.Sprite):
     def on_surface(self):
         return self.standing_tile is not None
 
-    def is_moving(self):
-        return abs(self.vx) > 0 or abs(self.vy) > 0
-        # return self.speed() > 0
-
-    def speed(self):
-        return math.sqrt(self.vx**2 + self.vy**2)
-
     def handle_horizontal_movement(self, pressed_keys, mods):
         if pressed_keys[pg.K_LEFT] or pressed_keys[pg.K_RIGHT]:
             if self.on_surface():
