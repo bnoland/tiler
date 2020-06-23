@@ -17,7 +17,7 @@ def main():
 
     with open('map.txt') as f:
         string_rep = [line.rstrip() for line in f]
-        map = Map(string_rep, (32, 32), (25, 50), 1.5)
+        map = Map(string_rep, (32, 32), (32, 32), 1.5)
 
     viewport = Viewport(screen, map)
 
@@ -45,7 +45,7 @@ def main():
 
     running = True
     while running:
-        print(player.vx, player.vy)
+        # print(player.vx, player.vy)
         # if not player.on_surface():
         #     print('off surface', player.vx, player.vy)
 

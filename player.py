@@ -1,15 +1,6 @@
 import pygame as pg
 import math
 
-def sgn(x):
-    if math.isclose(x, 0):
-        return 0
-    elif x < 0:
-        return -1
-    elif x > 0:
-        return 1
-
-# TODO: Overhaul/cleanup of physics system needed.
 class Player(pg.sprite.Sprite):
     def __init__(self, map, size, pos):
         super().__init__()
@@ -38,15 +29,15 @@ class Player(pg.sprite.Sprite):
         self.standing_tile = None  # Tile currently standing on
 
     def jump(self):
-        if self.on_surface():
-            self.jump_count = 0
-
         if self.jump_count < self.max_jumps:
             self.jump_count += 1
             self.vy = -20
 
     def on_surface(self):
         return self.standing_tile is not None
+
+    def is_jumping(self):
+        return self.jump_count > 0
 
     def handle_horizontal_movement(self, pressed_keys, mods):
         if pressed_keys[pg.K_LEFT] or pressed_keys[pg.K_RIGHT]:
@@ -61,46 +52,47 @@ class Player(pg.sprite.Sprite):
                     self.vx *= 1.5
 
     def physics_step(self, dt):
-        # TODO: Need to calibrate order of movement and calculation of forces on
-        # player.
+        # TODO: Possibly problematic edge-case: player is standing where there
+        # is no room to jump, e.g., tiles immediately above and below player.
+        if not self.is_jumping():
+            if self.on_surface():
+                tile_type = self.standing_tile.get_type()
+                friction = self.standing_tile.get_friction()
+
+                if tile_type == 'block':
+                    self.vx += friction * -self.vx * dt
+                    self.vy += self.gravity * dt
+                elif tile_type == 'left_ramp':
+                    # TODO: Implement.
+                    pass
+                elif tile_type == 'right_ramp':
+                    theta = math.pi / 180 * 45
+                    normal = self.gravity * math.cos(theta)
+                    slide = self.gravity * math.sin(theta)
+                    self.vy += normal * math.cos(theta) * dt
+                    self.vx += -slide * math.sin(theta) * dt
+                    self.vy += -slide * math.cos(theta) * dt
+                    self.vx += friction * -self.vx * dt
+                    self.vy += friction * -self.vy * dt
+                else:
+                    # Invalid tile type.
+                    pass
+            else:
+                self.vy += self.gravity * dt
+        else:
+            # If you're jumping, you're no longer standing on a surface.
+            self.vy += self.gravity * dt
 
         dx = self.vx * dt
         dy = self.vy * dt
         self.move(dx, dy)
 
-        if self.on_surface():
-            tile_type = self.standing_tile.get_type()
-            friction = self.standing_tile.get_friction()
-
-            if tile_type == 'block':
-                self.vx += friction * -self.vx * dt
-                self.vy += self.gravity * dt
-            elif tile_type == 'left_ramp':
-                # TODO: Implement.
-                pass
-            elif tile_type == 'right_ramp':
-                theta = math.pi / 180 * 45
-                normal = self.gravity * math.cos(theta)
-                slide = self.gravity * math.sin(theta)
-                self.vy += normal * math.cos(theta) * dt
-                self.vx += -slide * math.sin(theta) * dt
-                self.vy += -slide * math.cos(theta) * dt
-                self.vx += friction * -self.vx * dt
-                self.vy += friction * -self.vy * dt
-            else:
-                # Invalid tile type.
-                pass
-        else:
-            self.vy += self.gravity * dt
-
-        # dx = self.vx * dt
-        # dy = self.vy * dt
-        # self.move(dx, dy)
-
     def move(self, dx, dy):
         self.move_single_axis(dx, 0)
         self.move_single_axis(0, dy)
 
+    # TODO: Player can jet through surfaces if moving very fast. How to handle
+    # this case?
     def move_single_axis(self, dx, dy):
         self.x += dx
         self.y += dy
@@ -125,6 +117,7 @@ class Player(pg.sprite.Sprite):
                         self.rect.bottom = tile.rect.top
                         self.vy = 0
                         self.standing_tile = tile
+                        self.jump_count = 0
                     elif 'bottom' in collision_points and dy < 0:
                         self.rect.top = tile.rect.bottom
                         self.vy = 0
@@ -143,6 +136,7 @@ class Player(pg.sprite.Sprite):
                                 (self.rect.right - tile.rect.left)
                             self.vy = 0
                             self.standing_tile = tile
+                            self.jump_count = 0
                 else:
                     # Invalid tile type.
                     pass
