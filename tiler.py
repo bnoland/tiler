@@ -7,17 +7,17 @@ from viewport import Viewport
 def main():
     pg.init()
 
-    # SCREEN_WIDTH = 800
-    # SCREEN_HEIGHT = 600
+    SCREEN_WIDTH = 800
+    SCREEN_HEIGHT = 600
 
-    SCREEN_WIDTH = 600
-    SCREEN_HEIGHT = 480
+    # SCREEN_WIDTH = 600
+    # SCREEN_HEIGHT = 480
 
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     with open('map.txt') as f:
         string_rep = [line.rstrip() for line in f]
-        map = Map(string_rep, (32, 32), (32, 32), 1.5)
+        map = Map(string_rep, 40, (25, 50), 1.5)
 
     viewport = Viewport(screen, map)
 
@@ -45,9 +45,7 @@ def main():
 
     running = True
     while running:
-        # print(player.vx, player.vy)
-        # if not player.on_surface():
-        #     print('off surface', player.vx, player.vy)
+        print(player.vx, player.vy)
 
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
@@ -62,8 +60,6 @@ def main():
         mods = pg.key.get_mods()
         player.handle_horizontal_movement(pressed_keys, mods)
         player.physics_step(dt)
-
-        # print(player.standing_tile)
 
         screen.fill((0, 0, 0))
 
@@ -80,8 +76,8 @@ def main():
         screen.blit(cloud_image2, cloud_rect2)
 
         viewport.draw(sprites)
-
         pg.display.flip()
+
         clock.tick(60)
 
     pg.quit()
