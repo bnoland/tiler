@@ -41,11 +41,11 @@ class Player(pg.sprite.Sprite):
     def handle_horizontal_movement(self, pressed_keys, mods):
         if pressed_keys[pg.K_LEFT] or pressed_keys[pg.K_RIGHT]:
             if self.on_surface():
-                # TODO: Need to account for surface friction.
+                friction = self.standing_tile.get_friction()
                 if pressed_keys[pg.K_LEFT]:
-                    self.vx += -10
+                    self.vx += -15 * friction
                 elif pressed_keys[pg.K_RIGHT]:
-                    self.vx += 10
+                    self.vx += 15 * friction
                 if mods & pg.KMOD_SHIFT:
                     # Run when shift pressed.
                     self.vx *= 1.5
