@@ -36,7 +36,7 @@ class Player(pg.sprite.Sprite):
         self.jumping = True
 
     def on_surface(self):
-        return self.standing_tile is not None and not self.jumping #self.is_jumping()
+        return self.standing_tile is not None and not self.jumping
 
     def start_walking_left(self):
         self.walking_left = True
