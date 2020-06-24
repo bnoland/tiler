@@ -39,6 +39,7 @@ def main():
 
     # TODO: If too small, can mess up collision detection. Could "rectify" by
     # increasing gravity to compensate.
+    # TODO: Might just want to get rid of time delta.
     dt = 1.0  # Time delta per frame
 
     clock = pg.time.Clock()
@@ -46,6 +47,7 @@ def main():
     running = True
     while running:
         print(player.vx, player.vy)
+        # print(player.standing_tile)
 
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
@@ -53,12 +55,23 @@ def main():
                     running = False
                 elif event.key == pg.K_UP:
                     player.jump()
+                elif event.key == pg.K_LEFT:
+                    player.start_walking_left()
+                elif event.key == pg.K_RIGHT:
+                    player.start_walking_right()
+            elif event.type == pg.KEYUP:
+                if event.key == pg.K_LEFT:
+                    player.stop_walking_left()
+                elif event.key == pg.K_RIGHT:
+                    player.stop_walking_right()
             elif event.type == pg.QUIT:
                 running = False
 
-        pressed_keys = pg.key.get_pressed()
-        mods = pg.key.get_mods()
-        player.handle_horizontal_movement(pressed_keys, mods)
+        if pg.key.get_mods() & pg.KMOD_SHIFT:
+            player.start_running()
+        else:
+            player.stop_running()
+
         player.physics_step(dt)
 
         screen.fill((0, 0, 0))

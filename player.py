@@ -24,39 +24,49 @@ class Player(pg.sprite.Sprite):
         self.jump_count = 0
         self.max_jumps = 2
 
-        # Tile player is currently standing on.
+        # Tile the player is currently standing on.
         self.standing_tile = None
 
-    def jump(self):
-        if self.jump_count < self.max_jumps:
-            self.jump_count += 1
-            self.vy = -20
+        self.walking_left = False
+        self.walking_right = False
+        self.running = False
+        self.jumping = False
 
-    def is_jumping(self):
-        return self.jump_count > 0
+    def jump(self):
+        self.jumping = True
 
     def on_surface(self):
-        return self.standing_tile is not None and not self.is_jumping()
+        return self.standing_tile is not None and not self.jumping #self.is_jumping()
 
-    def handle_horizontal_movement(self, pressed_keys, mods):
-        if pressed_keys[pg.K_LEFT] or pressed_keys[pg.K_RIGHT]:
-            if self.on_surface():
-                friction = self.standing_tile.get_friction()
-                if pressed_keys[pg.K_LEFT]:
-                    self.vx += -15 * friction
-                elif pressed_keys[pg.K_RIGHT]:
-                    self.vx += 15 * friction
-                if mods & pg.KMOD_SHIFT:
-                    # Run when shift pressed.
-                    self.vx *= 1.5
+    def start_walking_left(self):
+        self.walking_left = True
+
+    def stop_walking_left(self):
+        self.walking_left = False
+
+    def start_walking_right(self):
+        self.walking_right = True
+
+    def stop_walking_right(self):
+        self.walking_right = False
+
+    def start_running(self):
+        self.running = True
+
+    def stop_running(self):
+        self.running = False
 
     def physics_step(self, dt):
-        # TODO: Possibly problematic edge-case: player is standing where there
-        # is no room to jump, e.g., tiles immediately above and below player.
         if self.on_surface():
-            tile_type = self.standing_tile.get_type()
             friction = self.standing_tile.get_friction()
 
+            run_factor = 1.5 if self.running else 1.0
+            if self.walking_left:
+                self.vx += -15 * friction * run_factor * dt
+            if self.walking_right:
+                self.vx += 15 * friction * run_factor * dt
+
+            tile_type = self.standing_tile.get_type()
             if tile_type == 'block':
                 self.vx += friction * -self.vx * dt
                 self.vy += self.gravity * dt
@@ -77,6 +87,12 @@ class Player(pg.sprite.Sprite):
                 pass
         else:
             self.vy += self.gravity * dt
+
+        if self.jumping and self.jump_count < self.max_jumps:
+            self.jump_count += 1
+            self.vy += -40 * dt
+
+        self.jumping = False  # Completed jump, if any
 
         # Limit velocity components to half a tile width to ensure the player
         # doesn't clip through a collideable tile.

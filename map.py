@@ -6,7 +6,6 @@ class Map:
     def __init__(self, string_rep, tile_size, player_size, gravity):
         super().__init__()
         self.tile_list = []
-        # self.tile_width, self.tile_height = tile_size
         self.tile_size = tile_size
 
         self.player_size = player_size
