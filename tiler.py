@@ -89,8 +89,8 @@ def main():
         screen.blit(bg_image, bg_rect)
 
         viewport.update(player)
-        viewport.draw(cloud_tiles1)
         viewport.draw(cloud_tiles2)
+        viewport.draw(cloud_tiles1)
         viewport.draw(sprites)
 
         pg.display.flip()
