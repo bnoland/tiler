@@ -3,6 +3,7 @@ from player import Player
 from tile import Tile
 from map import Map
 from viewport import Viewport
+from background import BackgroundLayer
 
 def main():
     pg.init()
@@ -36,24 +37,18 @@ def main():
     player.physics_step(dt)  # Ensure player position is kosher
     viewport.center_on(player)
 
-    # cloud_image1 = pg.Surface((60, 60))
-    # cloud_image1.fill((100, 100, 100))
-    # cloud_rect1 = cloud_image1.get_rect(topleft=(100, 200))
-    #
-    # cloud_image2 = pg.Surface((100, 100))
-    # cloud_image2.fill((120, 120, 120))
-    # cloud_rect2 = cloud_image2.get_rect(topleft=(300, 50))
-
+    # Hacky parallax demo.
     from tile import EarthTile
     import random
     cloud_tiles1 = [
         EarthTile((200*x, 200+100*(random.random()-0.5)), 50)
         for x in range(1, 10)]
-    # sprites.extend(cloud_tiles1)
     cloud_tiles2 = [
         EarthTile((150*x, 200+150*(random.random()-0.5)), 30)
         for x in range(1, 10)]
-    # sprites.extend(cloud_tiles2)
+    map.background_layers = [
+        BackgroundLayer(cloud_tiles1, (0.25, 0.25)),
+        BackgroundLayer(cloud_tiles2, (0.5, 0.5))]
 
     clock = pg.time.Clock()
 
@@ -93,29 +88,11 @@ def main():
 
         screen.blit(bg_image, bg_rect)
 
-        # TODO: Parallax logic needs to be put into viewport class.
-        old_x = viewport.rect.x
-        old_y = viewport.rect.y
         viewport.update(player)
-        new_x = viewport.rect.x
-        new_y = viewport.rect.y
-        # cloud_rect1.x = round(cloud_rect1.x - 0.25 * (new_x - old_x))
-        # cloud_rect2.x = round(cloud_rect2.x - 1.0 * (new_x - old_x))
-
-        for cloud_tile in cloud_tiles1:
-            cloud_tile.rect.x = round(cloud_tile.rect.x + 0.25 * (new_x - old_x))
-            cloud_tile.rect.y = round(cloud_tile.rect.y + 0.25 * (new_y - old_y))
-        for cloud_tile in cloud_tiles2:
-            cloud_tile.rect.x = round(cloud_tile.rect.x + 0.5 * (new_x - old_x))
-            cloud_tile.rect.y = round(cloud_tile.rect.y + 0.5 * (new_y - old_y))
-
-        # screen.blit(cloud_image1, cloud_rect1)
-        # screen.blit(cloud_image2, cloud_rect2)
-
         viewport.draw(cloud_tiles1)
         viewport.draw(cloud_tiles2)
-
         viewport.draw(sprites)
+
         pg.display.flip()
 
         clock.tick(60)

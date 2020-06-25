@@ -2,7 +2,6 @@ import pygame as pg
 from tile import Tile, EarthTile, IceTile
 from player import Player
 
-# TODO: Manage background layers.
 class Map:
     def __init__(self, string_rep, tile_size, player_size, gravity,
                  background_layers=[]):
@@ -12,6 +11,8 @@ class Map:
 
         self.player_size = player_size
         self.gravity = gravity
+
+        self.background_layers = background_layers
 
         # TODO: Rather crude width/height calculations based on string
         # representation.
@@ -32,6 +33,9 @@ class Map:
 
     def get_tile_size(self):
         return self.tile_size
+
+    def get_background_layers(self):
+        return self.background_layers
 
     def _build_from_string(self, string_rep):
         is_not_tile = lambda c: c == 'p' or c == ' '
