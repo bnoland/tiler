@@ -1,12 +1,16 @@
 import pygame as pg
 
+# TODO: Handle background layers.
 class Viewport:
-    def __init__(self, screen, map):
+    def __init__(self, screen, map, start_pos=(0, 0)):
         self.screen = screen
         width = screen.get_width()
         height = screen.get_height()
-        self.rect = pg.Rect(0, 0, width, height)
+        self.rect = pg.Rect(start_pos, (width, height))
         self.map = map
+
+    def center_on(self, sprite):
+        self.rect.center = sprite.rect.center
 
     def apply(self, sprite):
         return sprite.rect.move((-self.rect.x, -self.rect.y))

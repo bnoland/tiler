@@ -2,8 +2,10 @@ import pygame as pg
 from tile import Tile, EarthTile, IceTile
 from player import Player
 
+# TODO: Manage background layers.
 class Map:
-    def __init__(self, string_rep, tile_size, player_size, gravity):
+    def __init__(self, string_rep, tile_size, player_size, gravity,
+                 background_layers=[]):
         super().__init__()
         self.tile_list = []
         self.tile_size = tile_size
