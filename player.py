@@ -71,8 +71,14 @@ class Player(pg.sprite.Sprite):
                 self.vx += friction * -self.vx * dt
                 self.vy += self.gravity * dt
             elif tile_type == 'left_ramp':
-                # TODO: Implement.
-                pass
+                theta = math.pi / 180 * 45
+                normal = self.gravity * math.cos(theta)
+                slide = self.gravity * math.sin(theta)
+                self.vy += normal * math.cos(theta) * dt
+                self.vx += slide * math.sin(theta) * dt
+                self.vy += slide * math.cos(theta) * dt
+                self.vx += friction * -self.vx * dt
+                self.vy += friction * -self.vy * dt
             elif tile_type == 'right_ramp':
                 theta = math.pi / 180 * 45
                 normal = self.gravity * math.cos(theta)
@@ -107,6 +113,7 @@ class Player(pg.sprite.Sprite):
         self.move(dx, dy)
 
     def move(self, dx, dy):
+        print(dx, dy)
         self.move_single_axis(dx, 0)
         self.move_single_axis(0, dy)
 
@@ -139,8 +146,19 @@ class Player(pg.sprite.Sprite):
                         self.rect.top = tile.rect.bottom
                         self.vy = 0
                 elif tile.get_type() == 'left_ramp':
-                    # TODO: Implement.
-                    pass
+                    if self.rect.bottom >= tile.rect.bottom + \
+                        (self.rect.left - tile.rect.right) and \
+                        self.rect.left >= tile.rect.left:
+                        if 'bottom' in collision_points and dy < 0:
+                            self.rect.top = tile.rect.bottom
+                            self.vy = 0
+                        elif 'top' in collision_points and \
+                            (dy > 0 or math.isclose(dx, 0)):
+                            self.rect.bottom = tile.rect.bottom + \
+                                (self.rect.left - tile.rect.right)
+                            self.vy = 0
+                            self.standing_tile = tile
+                            self.jump_count = 0
                 elif tile.get_type() == 'right_ramp':
                     if self.rect.bottom >= tile.rect.bottom - \
                         (self.rect.right - tile.rect.left) and \
