@@ -113,7 +113,7 @@ class Player(pg.sprite.Sprite):
         self.move(dx, dy)
 
     def move(self, dx, dy):
-        print(dx, dy)
+        # print(dx, dy)
         self.move_single_axis(dx, 0)
         self.move_single_axis(0, dy)
 
@@ -146,6 +146,7 @@ class Player(pg.sprite.Sprite):
                         self.rect.top = tile.rect.bottom
                         self.vy = 0
                 elif tile.get_type() == 'left_ramp':
+                    # TODO: Reform!!
                     if self.rect.bottom >= tile.rect.bottom + \
                         (self.rect.left - tile.rect.right) and \
                         self.rect.left >= tile.rect.left:
@@ -160,19 +161,36 @@ class Player(pg.sprite.Sprite):
                             self.standing_tile = tile
                             self.jump_count = 0
                 elif tile.get_type() == 'right_ramp':
-                    if self.rect.bottom >= tile.rect.bottom - \
-                        (self.rect.right - tile.rect.left) and \
-                        self.rect.right <= tile.rect.right:
-                        if 'bottom' in collision_points and dy < 0:
-                            self.rect.top = tile.rect.bottom
-                            self.vy = 0
-                        elif 'top' in collision_points and \
-                            (dy > 0 or math.isclose(dx, 0)):
+                    if 'bottom' in collision_points and dy < 0:
+                        self.rect.top = tile.rect.bottom
+                        self.vy = 0
+                    elif 'top' in collision_points and dy > 0:
+                        if self.rect.bottom >= tile.rect.bottom - \
+                            (self.rect.right - tile.rect.left) and \
+                            self.rect.right <= tile.rect.right:
+
                             self.rect.bottom = tile.rect.bottom - \
                                 (self.rect.right - tile.rect.left)
                             self.vy = 0
                             self.standing_tile = tile
                             self.jump_count = 0
+
+                    # if 'left' in collision_points and dx > 0:
+                    #     # TODO: Doesn't work well as-is with ramps consisting of
+                    #     # multiple ramp tiles.
+                    #     if self.rect.bottom > tile.rect.bottom and \
+                    #         self.rect.top < tile.rect.bottom:
+                    #         self.rect.right = tile.rect.left
+                    #         self.vx = 0
+                    #         print('top:', self.rect.top, tile.rect.bottom)
+                    #         print('bottom:', self.rect.bottom, tile.rect.bottom)
+                    #     elif self.rect.bottom >= tile.rect.bottom - \
+                    #         (self.rect.right - tile.rect.left) and \
+                    #         self.rect.right <= tile.rect.right:
+                    #         self.rect.bottom = tile.rect.bottom - \
+                    #             (self.rect.right - tile.rect.left)
+                    # elif 'right' in collision_points and dx < 0:
+                    #     pass
                 else:
                     # Invalid tile type.
                     pass

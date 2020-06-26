@@ -49,6 +49,8 @@ class Tile(pg.sprite.Sprite):
                 (0, self.size-1),
                 (self.size-1, self.size-1))
 
+        pg.draw.rect(self.image, (0, 0, 255), self.image.get_rect(), 1)
+
         self.friction = friction
 
     def get_friction(self):
