@@ -114,7 +114,9 @@ class Tile(pg.sprite.Sprite):
                 sprite.standing_tile = self
                 sprite.jump_count = 0
         if 'left' in self.collision_points and x_move > 0:
-            pass
+            if sprite.rect.left < self.rect.left:
+                sprite.rect.right = self.rect.left
+                sprite.vx = 0
         elif 'right' in self.collision_points and x_move < 0:
             if sprite.rect.bottom > self.rect.bottom and \
                 sprite.rect.top < self.rect.bottom:
@@ -150,7 +152,9 @@ class Tile(pg.sprite.Sprite):
                 sprite.rect.bottom = self.rect.bottom - \
                     (sprite.rect.right - self.rect.left)
         elif 'right' in self.collision_points and x_move < 0:
-            pass
+            if sprite.rect.right > self.rect.right:
+                sprite.rect.left = self.rect.right
+                sprite.vx = 0
 
     def handle_physics(self, sprite, dt):
         if self.type == 'block':

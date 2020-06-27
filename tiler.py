@@ -96,6 +96,7 @@ def main():
         pg.display.flip()
 
         clock.tick(60)
+        # clock.tick(10)
 
     pg.quit()
 
