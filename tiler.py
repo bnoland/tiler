@@ -18,7 +18,7 @@ def main():
 
     with open('map.txt') as f:
         string_rep = [line.rstrip() for line in f]
-        map = Map(string_rep, 40, (25, 50), 1.5)
+        map = Map(string_rep, 32, (25, 50), 1.5)
 
     player = map.get_player()
     tiles = map.get_tiles()
@@ -41,10 +41,10 @@ def main():
     from tile import EarthTile
     import random
     cloud_tiles1 = [
-        EarthTile((200*x, 200+100*(random.random()-0.5)), 50)
+        EarthTile(map, (200*x, 200+100*(random.random()-0.5)), 50)
         for x in range(1, 10)]
     cloud_tiles2 = [
-        EarthTile((150*x, 200+150*(random.random()-0.5)), 30)
+        EarthTile(map, (200*x, 200+150*(random.random()-0.5)), 30)
         for x in range(1, 10)]
     map.background_layers = [
         BackgroundLayer(cloud_tiles1, (0.25, 0.25)),

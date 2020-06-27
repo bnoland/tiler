@@ -63,26 +63,26 @@ class Map:
 
                     # Earth tiles
                     if col == '0':
-                        new_tile = EarthTile((x, y), self.tile_size,
+                        new_tile = EarthTile(self, (x, y), self.tile_size,
                             type='block', collision_points=collision_points)
                     elif col == '1':
-                        new_tile = EarthTile((x, y), self.tile_size,
+                        new_tile = EarthTile(self, (x, y), self.tile_size,
                             type='left_ramp',
                             collision_points=collision_points)
                     elif col == '2':
-                        new_tile = EarthTile((x, y), self.tile_size,
+                        new_tile = EarthTile(self, (x, y), self.tile_size,
                             type='right_ramp',
                             collision_points=collision_points)
                     # Ice tiles
                     elif col == '3':
-                        new_tile = IceTile((x, y), self.tile_size,
+                        new_tile = IceTile(self, (x, y), self.tile_size,
                             type='block', collision_points=collision_points)
                     elif col == '4':
-                        new_tile = IceTile((x, y), self.tile_size,
+                        new_tile = IceTile(self, (x, y), self.tile_size,
                             type='left_ramp',
                             collision_points=collision_points)
                     elif col == '5':
-                        new_tile = IceTile((x, y), self.tile_size,
+                        new_tile = IceTile(self, (x, y), self.tile_size,
                             type='right_ramp',
                             collision_points=collision_points)
                     else:
