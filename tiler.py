@@ -86,7 +86,7 @@ def main():
         # perform any sprite updates before the loop begins.
         screen.fill((0, 0, 0))
 
-        screen.blit(bg_image, bg_rect)
+        # screen.blit(bg_image, bg_rect)
 
         viewport.update(player)
         viewport.draw(cloud_tiles2)

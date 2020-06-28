@@ -77,17 +77,49 @@ class Player(pg.sprite.Sprite):
 
         self.jumping = False  # Completed jump, if any
 
+        # self.vx = -5
+        # self.vy = 5
+
+        # self.vx = self.vy = 0
+
         dx = round(self.vx * dt)
         dy = round(self.vy * dt)
         self._move(dx, dy)
 
+    # def _move(self, dx, dy):
+    #     x_move, y_move = math.copysign(1, dx), math.copysign(1, dy)
+    #     x_steps, y_steps = abs(dx), abs(dy)
+    #     for _ in range(x_steps):
+    #         self._step_single_axis(x_move, 0)
+    #     for _ in range(y_steps):
+    #         self._step_single_axis(0, y_move)
+
     def _move(self, dx, dy):
-        x_move, y_move = math.copysign(1, dx), math.copysign(1, dy)
-        x_steps, y_steps = abs(dx), abs(dy)
-        for _ in range(x_steps):
-            self._step_single_axis(x_move, 0)
-        for _ in range(y_steps):
-            self._step_single_axis(0, y_move)
+        if dx == 0:
+            # Player is moving vertically.
+            y_steps = abs(dy)
+            y_move = math.copysign(1, dy)
+            for _ in range(y_steps):
+                self._step_single_axis(0, y_move)
+        else:
+            # Player is moving at some non-zero angle with the vertical.
+            rate = dy / dx
+            x_steps = abs(dx)
+            y_accum = 0
+            x_move = math.copysign(1, dx)
+            y_move = math.copysign(1, dy)
+            for _ in range(x_steps):
+                self._step_single_axis(x_move, 0)
+                y_accum += abs(rate)
+                y_steps = int(y_accum)
+                y_accum -= y_steps
+                for _ in range(y_steps):
+                    self._step_single_axis(0, y_move)
+
+            # Perform any remaining vertical steps.
+            y_steps = round(y_accum)
+            for _ in range(y_steps):
+                self._step_single_axis(0, y_move)
 
     def _step_single_axis(self, x_move, y_move):
         self.rect.move_ip(x_move, y_move)

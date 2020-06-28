@@ -45,6 +45,7 @@ class Map:
                 x, y = self.tile_size * j, self.tile_size * i
                 if col == 'p':
                     self.player = Player(self, (x, y), self.player_size)
+                    # self.player = Player(self, (x, y-15), self.player_size)
                 elif col != ' ':
                     # Quick n' dirty automated collision point generation.
                     collision_points = []
