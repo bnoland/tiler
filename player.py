@@ -77,11 +77,6 @@ class Player(pg.sprite.Sprite):
 
         self.jumping = False  # Completed jump, if any
 
-        # self.vx = -5
-        # self.vy = 5
-
-        # self.vx = self.vy = 0
-
         dx = round(self.vx * dt)
         dy = round(self.vy * dt)
         self._move(dx, dy)
@@ -95,6 +90,8 @@ class Player(pg.sprite.Sprite):
     #         self._step_single_axis(0, y_move)
 
     def _move(self, dx, dy):
+        # TODO: Stop moving pixel-wise when no longer any velocity in that
+        # direction?
         if dx == 0:
             # Player is moving vertically.
             y_steps = abs(dy)
