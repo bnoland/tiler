@@ -135,18 +135,17 @@ class Block(pg.sprite.Sprite):
         if surface_type is None:
             self.image.fill(WHITE)
 
-        if self.collision_edges is not None:
-            width, height = self.rect.size
-            if 'left' in self.collision_edges:
-                pg.draw.line(self.image, RED, (0, 0), (0, height-1))
-            if 'right' in self.collision_edges:
-                pg.draw.line(
-                    self.image, RED, (width-1, 0), (width-1, height-1))
-            if 'top' in self.collision_edges:
-                pg.draw.line(self.image, RED, (0, 0), (width-1, 0))
-            if 'bottom' in self.collision_edges:
-                pg.draw.line(
-                    self.image, RED, (0, height-1), (width-1, height-1))
+        width, height = self.rect.size
+        if 'left' in self.collision_edges:
+            pg.draw.line(self.image, RED, (0, 0), (0, height-1))
+        if 'right' in self.collision_edges:
+            pg.draw.line(
+                self.image, RED, (width-1, 0), (width-1, height-1))
+        if 'top' in self.collision_edges:
+            pg.draw.line(self.image, RED, (0, 0), (width-1, 0))
+        if 'bottom' in self.collision_edges:
+            pg.draw.line(
+                self.image, RED, (0, height-1), (width-1, height-1))
 
 class Ramp(pg.sprite.Sprite):
     def __init__(self, loc, size, ramp_type, surface_type=None,
@@ -170,18 +169,17 @@ class Ramp(pg.sprite.Sprite):
                 points = ((0, height-1), (width-1, height-1), (width-1, 0))
                 pg.draw.polygon(self.image, WHITE, points)
 
-        if self.collision_edges is not None:
-            width, height = self.rect.size
-            if 'left' in self.collision_edges:
-                pg.draw.line(self.image, RED, (0, 0), (0, height-1))
-            if 'right' in self.collision_edges:
-                pg.draw.line(
-                    self.image, RED, (width-1, 0), (width-1, height-1))
-            if 'top' in self.collision_edges:
-                pg.draw.line(self.image, RED, (0, 0), (width-1, 0))
-            if 'bottom' in self.collision_edges:
-                pg.draw.line(
-                    self.image, RED, (0, height-1), (width-1, height-1))
+        width, height = self.rect.size
+        if 'left' in self.collision_edges:
+            pg.draw.line(self.image, RED, (0, 0), (0, height-1))
+        if 'right' in self.collision_edges:
+            pg.draw.line(
+                self.image, RED, (width-1, 0), (width-1, height-1))
+        if 'top' in self.collision_edges:
+            pg.draw.line(self.image, RED, (0, 0), (width-1, 0))
+        if 'bottom' in self.collision_edges:
+            pg.draw.line(
+                self.image, RED, (0, height-1), (width-1, height-1))
 
 if __name__ == '__main__':
     pg.init()
