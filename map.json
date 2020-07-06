@@ -1,0 +1,65 @@
+{
+    "name": "test map",
+    "player": {
+        "loc": [10, 5]
+    },
+    "blocks": [
+        {
+            "loc": [8, 8],
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [9, 8],
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [9, 9],
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [9, 7],
+            "surface_type": null,
+            "collision_edges": null
+        }
+    ],
+    "ramps": [
+        {
+            "loc": [4, 14],
+            "size": [4, 4],
+            "ramp_type": "right_ramp",
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [8, 12],
+            "size": [4, 2],
+            "ramp_type": "right_ramp",
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [12, 11],
+            "size": [3, 1],
+            "ramp_type": "right_ramp",
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [15, 11],
+            "size": [4, 1],
+            "ramp_type": "left_ramp",
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [19, 12],
+            "size": [4, 4],
+            "ramp_type": "left_ramp",
+            "surface_type": null,
+            "collision_edges": null
+        }
+    ]
+}
