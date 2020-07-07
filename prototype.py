@@ -50,8 +50,10 @@ class Map:
     def _compute_block_collision_edges(self, map_data):
         block_dict = {tuple(data['loc']): data
                       for data in map_data['blocks']}
-        ramp_dict = {tuple(data['loc']): data
-                     for data in map_data['ramps']}
+        # TODO: This next bit is a little hacky right now...
+        ramp_dict = {loc: None
+                     for data in map_data['ramps']
+                     for loc in Ramp(**data).get_composite_tiles()}
 
         open_tile = lambda x, y: (x, y) not in block_dict and \
                                  (x, y) not in ramp_dict
@@ -131,11 +133,11 @@ class Player(pg.sprite.Sprite):
         for block in blocks:
             if self.rect.colliderect(block.rect):
                 if 'left' in block.collision_edges and disp[0] > 0:
-                    print('left')
+                    print('left')  # TODO: Debugging.
                     self.vx = 0
                     self.rect.right = block.rect.left
                 elif 'right' in block.collision_edges and disp[0] < 0:
-                    print('right')
+                    print('right')  # TODO: Debugging.
                     self.vx = 0
                     self.rect.left = block.rect.right
 
@@ -225,8 +227,17 @@ class Ramp(pg.sprite.Sprite):
                 points = ((0, height-1), (width-1, height-1), (width-1, 0))
                 pg.draw.polygon(self.image, WHITE, points)
 
-    def get_tiles(self):
-        pass
+    # TODO: Just returns the tile positions for now, including tiles that don't
+    # necessarily overlap the ramp.
+    def get_composite_tiles(self):
+        n_horz_tiles = int(self.rect.width / TILE_WIDTH)
+        n_vert_tiles = int(self.rect.height / TILE_HEIGHT)
+        x = int(self.rect.x / TILE_WIDTH)
+        y = int(self.rect.y / TILE_HEIGHT)
+        tile_list = [(x + x_offset, y + y_offset)
+                     for x_offset in range(n_horz_tiles)
+                     for y_offset in range(n_vert_tiles)]
+        return tile_list
 
 if __name__ == '__main__':
     pg.init()
@@ -239,6 +250,8 @@ if __name__ == '__main__':
     player = map.player
     blocks = map.blocks
     ramps = map.ramps
+
+    # print(ramps[0].get_composite_tiles())
 
     viewport = Viewport((0, 0), screen.get_rect().size)
 
