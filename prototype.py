@@ -168,6 +168,10 @@ class Player(pg.sprite.Sprite):
                     # tile, change condition to:
                     # if 'top' in block.collision_edges and disp[1] > 0 and \
                     #    self.rect.top < block.rect.top: [...]
+                    # But this can still be refined. For example, only snap the
+                    # bottom of the player to the top of the tile if the bottom
+                    # of the player is *just* below the top of the tile. Can
+                    # indicate this behavior using a flag in the Block class.
                     if 'top' in block.collision_edges and disp[1] > 0:
                         self.vy = 0
                         self.rect.bottom = block.rect.top
@@ -305,8 +309,6 @@ if __name__ == '__main__':
 
     running = True
     while running:
-        print(player.standing_surface)
-
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
@@ -318,12 +320,11 @@ if __name__ == '__main__':
                 elif event.key == pg.K_UP:
                     if player.ladder_behind is not None and \
                        not isinstance(player.standing_surface, Ladder):
-                        # Start climbing ladder if not already standing on top
-                        # of it.
+                        # Only start climbing ladder if not already standing on
+                        # top of it.
                         player.on_ladder = True
                         player.climbing_up_ladder = True
                         player.vx = player.vy = 0
-                        # print('climbing up')  # TODO: Debugging.
                     else:
                         player.jumping = True
                 elif event.key == pg.K_DOWN:
@@ -331,7 +332,6 @@ if __name__ == '__main__':
                         player.on_ladder = True
                         player.climbing_down_ladder = True
                         player.vx = player.vy = 0
-                        # print('climbing down')  # TODO: Debugging.
             elif event.type == pg.KEYUP:
                 if event.key == pg.K_LEFT:
                     player.moving_left = False
