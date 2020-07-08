@@ -122,6 +122,7 @@ class Player(pg.sprite.Sprite):
         self.image.fill(RED)
 
         self.moving_left, self.moving_right = False, False
+        self.running = False
         self.climbing_up_ladder, self.climbing_down_ladder = False, False
         self.on_ladder = False
 
@@ -344,7 +345,14 @@ if __name__ == '__main__':
             elif event.type == pg.QUIT:
                 running = False
 
+        if pg.key.get_mods() & pg.KMOD_SHIFT:
+            player.running = True
+        else:
+            player.running = False
+
         disp = [0, 0]
+
+        run_factor = 1.5 if player.running else 1.0
 
         if player.on_ladder:
             if player.climbing_up_ladder:
@@ -354,19 +362,19 @@ if __name__ == '__main__':
 
             if player.moving_left:
                 player.on_ladder = False
-                player.vx -= 5
+                player.vx -= 5 * run_factor
             if player.moving_right:
                 player.on_ladder = False
-                player.vx += 5
+                player.vx += 5 * run_factor
 
             disp[0] += player.vx
         else:
             if player.standing_surface is not None:
                 player.vx -= 0.9 * player.vx
                 if player.moving_left:
-                    player.vx -= 5
+                    player.vx -= 5 * run_factor
                 if player.moving_right:
-                    player.vx += 5
+                    player.vx += 5 * run_factor
 
                 if isinstance(player.standing_surface, Ramp):
                     ramp = player.standing_surface
