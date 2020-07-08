@@ -9,10 +9,11 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
 TILE_WIDTH, TILE_HEIGHT = 32, 32
+PLAYER_WIDTH, PLAYER_HEIGHT = TILE_WIDTH, 2 * TILE_HEIGHT
 
 class Map:
     def __init__(self, size=None, player=None, blocks=None, ramps=None,
-                 filepath=None):
+                 ladders=None, filepath=None):
         if filepath is None:
             width, height = TILE_WIDTH * size[0], TILE_HEIGHT * size[1]
             self.rect = pg.Rect((0, 0), (width, height))
@@ -20,6 +21,7 @@ class Map:
             self.player = player
             self.blocks = blocks
             self.ramps = ramps
+            self.ladders = ladders
         else:
             self._from_file(filepath)
 
@@ -42,10 +44,13 @@ class Map:
         self.player = Player(**player_data)
 
         block_data_list = self._compute_block_collision_edges(map_data)
-        self.blocks = [Block(**d) for d in block_data_list]
+        self.blocks = [Block(**data) for data in block_data_list]
 
         ramp_data_list = map_data['ramps']
-        self.ramps = [Ramp(**d) for d in ramp_data_list]
+        self.ramps = [Ramp(**data) for data in ramp_data_list]
+
+        ladder_data_list = map_data['ladders']
+        self.ladders = [Ladder(**data) for data in ladder_data_list]
 
     def _compute_block_collision_edges(self, map_data):
         block_dict = {tuple(data['loc']): data
@@ -78,8 +83,7 @@ class Viewport:
     def __init__(self, loc, pixel_size):
         self.rect = pg.Rect(loc, pixel_size)
 
-    def update(self, sprite, map):
-        snap_rate = 1 / 1.1  # If zero will immediately snap on sprite.
+    def update(self, sprite, map, snap_rate = 1 / 1.1):
         new_center = [0, 0]
         new_center[0] = sprite.rect.center[0] + \
             (self.rect.center[0] - sprite.rect.center[0]) * snap_rate
@@ -109,76 +113,122 @@ class Viewport:
 class Player(pg.sprite.Sprite):
     def __init__(self, loc):
         super().__init__()
-        width, height = TILE_WIDTH, 2 * TILE_HEIGHT
+
+        width, height = PLAYER_WIDTH, PLAYER_HEIGHT
         self.image = pg.Surface((width, height))
         self.rect = self.image.get_rect(
             topleft=(loc[0] * TILE_WIDTH, loc[1] * TILE_HEIGHT)
         )
         self.image.fill(RED)
 
-        self.moving_left = False
-        self.moving_right = False
+        self.moving_left, self.moving_right = False, False
+        self.climbing_up_ladder, self.climbing_down_ladder = False, False
+        self.on_ladder = False
 
         self.jumping = False
         self.jumps_left = 2
 
         self.standing_surface = None
+        self.ladder_behind = None
 
         self.x, self.y = self.rect.topleft
         self.vx, self.vy = 0, 0
 
-    def move(self, disp, blocks, ramps):
-        self.rect.x = round(self.rect.x + disp[0])
-        for block in blocks:
-            if self.rect.colliderect(block.rect):
-                if 'left' in block.collision_edges and disp[0] > 0:
-                    self.vx = 0
-                    self.rect.right = block.rect.left
-                elif 'right' in block.collision_edges and disp[0] < 0:
-                    self.vx = 0
-                    self.rect.left = block.rect.right
+    def move(self, disp, blocks, ramps, ladders):
+        if self.on_ladder:
+            self.rect.y = round(self.rect.y + disp[1])
+            self.standing_surface = None
+            ladder = self.ladder_behind
+            if disp[1] < 0 and self.rect.bottom < ladder.rect.top:
+                self.rect.bottom = ladder.rect.top
+                self.on_ladder = False
+                self.climbing_up_ladder = False
+            if disp[1] > 0 and self.rect.bottom > ladder.rect.bottom:
+                self.rect.bottom = ladder.rect.bottom
+                self.on_ladder = False
+                self.climbing_down_ladder = False
 
-        self.rect.y = round(self.rect.y + disp[1])
-        self.standing_surface = None
-        for block in blocks:
-            if self.rect.colliderect(block.rect):
-                if 'top' in block.collision_edges and disp[1] > 0:
-                    self.vy = 0
-                    self.rect.bottom = block.rect.top
-                    self.standing_surface = block
-                    self.jumping = False
-                    self.jumps_left = 2
-                elif 'bottom' in block.collision_edges and disp[1] < 0:
-                    self.vy = 0
-                    self.rect.top = block.rect.bottom
+            self.x, self.y = self.rect.topleft
+        else:
+            self.rect.x = round(self.rect.x + disp[0])
+            for block in blocks:
+                if self.rect.colliderect(block.rect):
+                    if 'left' in block.collision_edges and disp[0] > 0:
+                        self.vx = 0
+                        self.rect.right = block.rect.left
+                    elif 'right' in block.collision_edges and disp[0] < 0:
+                        self.vx = 0
+                        self.rect.left = block.rect.right
 
-        for ramp in ramps:
-            if self.rect.colliderect(ramp.rect):
-                slope = ramp.rect.height / ramp.rect.width
-                if ramp.ramp_type == 'left_ramp':
-                    y_offset = slope * (ramp.rect.right - self.rect.left)
-                elif ramp.ramp_type == 'right_ramp':
-                    y_offset = slope * (self.rect.right - ramp.rect.left)
+            self.rect.y = round(self.rect.y + disp[1])
+            self.standing_surface = None
+            for block in blocks:
+                if self.rect.colliderect(block.rect):
+                    # TODO: To allow the player to jump through the bottom of a
+                    # tile, change condition to:
+                    # if 'top' in block.collision_edges and disp[1] > 0 and \
+                    #    self.rect.top < block.rect.top: [...]
+                    if 'top' in block.collision_edges and disp[1] > 0:
+                        self.vy = 0
+                        self.rect.bottom = block.rect.top
+                        self.standing_surface = block
+                        self.jumping = False
+                        self.jumps_left = 2
+                    elif 'bottom' in block.collision_edges and disp[1] < 0:
+                        self.vy = 0
+                        self.rect.top = block.rect.bottom
 
-                y_offset = min(y_offset, ramp.rect.height)
-                y_offset = max(y_offset, 0)  # TODO: Needed?
+            for ramp in ramps:
+                if self.rect.colliderect(ramp.rect):
+                    slope = ramp.rect.height / ramp.rect.width
+                    if ramp.ramp_type == 'left_ramp':
+                        y_offset = slope * (ramp.rect.right - self.rect.left)
+                    elif ramp.ramp_type == 'right_ramp':
+                        y_offset = slope * (self.rect.right - ramp.rect.left)
 
-                if self.rect.bottom > ramp.rect.bottom - y_offset:
-                    self.vy = 0
-                    self.rect.bottom = int(ramp.rect.bottom - y_offset)
-                    self.standing_surface = ramp
-                    self.jumping = False
-                    self.jumps_left = 2
+                    y_offset = min(y_offset, ramp.rect.height)
+                    y_offset = max(y_offset, 0)  # TODO: Needed?
 
-        self.x, self.y = self.rect.topleft
+                    if self.rect.bottom > ramp.rect.bottom - y_offset:
+                        self.vy = 0
+                        self.rect.bottom = int(ramp.rect.bottom - y_offset)
+                        self.standing_surface = ramp
+                        self.jumping = False
+                        self.jumps_left = 2
 
-class Tile(pg.sprite.Sprite):
-    pass
+            self.ladder_behind = None
+            for ladder in ladders:
+                if self.rect.colliderect(ladder.rect):
+                    if ladder.rect.contains(self.rect):
+                        self.ladder_behind = ladder
+                    if disp[1] > 0 and self.rect.top < ladder.rect.top:
+                        self.ladder_behind = ladder
+                        self.vy = 0
+                        self.rect.bottom = ladder.rect.top
+                        self.standing_surface = ladder
+                        self.jumping = False
+                        self.jumps_left = 2
+
+            self.x, self.y = self.rect.topleft
+
+class Ladder(pg.sprite.Sprite):
+    def __init__(self, loc, height):
+        super().__init__()
+
+        self.image = pg.Surface((TILE_WIDTH * 2, TILE_HEIGHT * height))
+        self.rect = self.image.get_rect(
+            topleft=(loc[0] * TILE_WIDTH, loc[1] * TILE_HEIGHT)
+        )
+
+        self.image.fill(GREEN)
+
+        self.loc = loc
 
 class Block(pg.sprite.Sprite):
     def __init__(self, loc, surface_type=None,
                  collision_edges=['left', 'right', 'top', 'bottom']):
         super().__init__()
+
         self.image = pg.Surface((TILE_WIDTH, TILE_HEIGHT))
         self.rect = self.image.get_rect(
             topleft=(loc[0] * TILE_WIDTH, loc[1] * TILE_HEIGHT)
@@ -206,6 +256,7 @@ class Block(pg.sprite.Sprite):
 class Ramp(pg.sprite.Sprite):
     def __init__(self, loc, size, ramp_type, surface_type=None):
         super().__init__()
+
         width, height = TILE_WIDTH * size[0], TILE_HEIGHT * size[1]
         self.image = pg.Surface((width, height))
         self.rect = self.image.get_rect(
@@ -227,10 +278,10 @@ class Ramp(pg.sprite.Sprite):
     # TODO: Returns locations of tiles that may not overlap the ramp image
     # itself. Change this?
     def get_composite_tile_locations(self):
+        # TODO: Store size in tile units?
         n_horz_tiles = int(self.rect.width / TILE_WIDTH)
         n_vert_tiles = int(self.rect.height / TILE_HEIGHT)
-        x = int(self.rect.x / TILE_WIDTH)
-        y = int(self.rect.y / TILE_HEIGHT)
+        x, y = self.loc
         tile_list = [(x + x_offset, y + y_offset)
                      for x_offset in range(n_horz_tiles)
                      for y_offset in range(n_vert_tiles)]
@@ -244,16 +295,18 @@ if __name__ == '__main__':
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     map = Map(filepath='map.json')
-    player = map.player
-    blocks = map.blocks
-    ramps = map.ramps
+    player, blocks, ramps, ladders = map.player, map.blocks, map.ramps, \
+                                     map.ladders
 
     viewport = Viewport((0, 0), screen.get_rect().size)
+    viewport.update(player, map, snap_rate=0)
 
     clock = pg.time.Clock()
 
     running = True
     while running:
+        print(player.standing_surface)
+
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
@@ -263,41 +316,76 @@ if __name__ == '__main__':
                 elif event.key == pg.K_RIGHT:
                     player.moving_right = True
                 elif event.key == pg.K_UP:
-                    player.jumping = True
+                    if player.ladder_behind is not None and \
+                       not isinstance(player.standing_surface, Ladder):
+                        # Start climbing ladder if not already standing on top
+                        # of it.
+                        player.on_ladder = True
+                        player.climbing_up_ladder = True
+                        player.vx = player.vy = 0
+                        # print('climbing up')  # TODO: Debugging.
+                    else:
+                        player.jumping = True
+                elif event.key == pg.K_DOWN:
+                    if player.ladder_behind is not None:
+                        player.on_ladder = True
+                        player.climbing_down_ladder = True
+                        player.vx = player.vy = 0
+                        # print('climbing down')  # TODO: Debugging.
             elif event.type == pg.KEYUP:
                 if event.key == pg.K_LEFT:
                     player.moving_left = False
                 elif event.key == pg.K_RIGHT:
                     player.moving_right = False
+                elif event.key == pg.K_UP:
+                    player.climbing_up_ladder = False
+                elif event.key == pg.K_DOWN:
+                    player.climbing_down_ladder = False
             elif event.type == pg.QUIT:
                 running = False
 
         disp = [0, 0]
 
-        if player.standing_surface is not None:
-            player.vx -= 0.9 * player.vx
+        if player.on_ladder:
+            if player.climbing_up_ladder:
+                disp[1] -= 5
+            if player.climbing_down_ladder:
+                disp[1] += 5
+
             if player.moving_left:
+                player.on_ladder = False
                 player.vx -= 5
             if player.moving_right:
+                player.on_ladder = False
                 player.vx += 5
 
-            if isinstance(player.standing_surface, Ramp):
-                ramp = player.standing_surface
-                slope = ramp.rect.height / ramp.rect.width
-                if ramp.ramp_type == 'right_ramp':
-                    disp[1] -= slope * player.vx
-                elif ramp.ramp_type == 'left_ramp':
-                    disp[1] += slope * player.vx
+            disp[0] += player.vx
+        else:
+            if player.standing_surface is not None:
+                player.vx -= 0.9 * player.vx
+                if player.moving_left:
+                    player.vx -= 5
+                if player.moving_right:
+                    player.vx += 5
 
-        player.vy += 1.5
-        if player.jumping and player.jumps_left > 0:
-            player.jumps_left -= 1
-            player.jumping = False
-            player.vy -= 20
+                if isinstance(player.standing_surface, Ramp):
+                    ramp = player.standing_surface
+                    slope = ramp.rect.height / ramp.rect.width
+                    if ramp.ramp_type == 'right_ramp':
+                        disp[1] -= slope * player.vx
+                    elif ramp.ramp_type == 'left_ramp':
+                        disp[1] += slope * player.vx
 
-        disp[0] += player.vx
-        disp[1] += player.vy
-        player.move(disp, blocks, ramps)
+            player.vy += 1.5
+            if player.jumping and player.jumps_left > 0:
+                player.jumps_left -= 1
+                player.jumping = False
+                player.vy -= 20
+
+            disp[0] += player.vx
+            disp[1] += player.vy
+
+        player.move(disp, blocks, ramps, ladders)
 
         screen.fill(BLACK)
 
@@ -308,6 +396,9 @@ if __name__ == '__main__':
 
         for ramp in ramps:
             viewport.draw(screen, ramp)
+
+        for ladder in ladders:
+            viewport.draw(screen, ladder)
 
         viewport.draw(screen, player)
 

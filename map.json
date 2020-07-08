@@ -2,7 +2,7 @@
     "name": "test map",
     "size": [60, 20],
     "player": {
-        "loc": [10, 10]
+        "loc": [30, 17]
     },
     "blocks": [
         {
@@ -154,6 +154,41 @@
             "loc": [44, 19],
             "surface_type": null,
             "collision_edges": null
+        },
+        {
+            "loc": [31, 13],
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [30, 13],
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [35, 13],
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [34, 13],
+            "surface_type": null,
+            "collision_edges": null
+        },
+        {
+            "loc": [39, 13],
+            "surface_type": null,
+            "collision_edges": ["top"]
+        },
+        {
+            "loc": [40, 13],
+            "surface_type": null,
+            "collision_edges": ["top"]
+        },
+        {
+            "loc": [41, 13],
+            "surface_type": null,
+            "collision_edges": ["top"]
         }
     ],
     "ramps": [
@@ -183,9 +218,15 @@
         },
         {
             "loc": [19, 12],
-            "size": [4, 4],
+            "size": [7, 7],
             "ramp_type": "left_ramp",
             "surface_type": null
+        }
+    ],
+    "ladders": [
+        {
+            "loc": [32, 13],
+            "height": 6
         }
     ]
 }
