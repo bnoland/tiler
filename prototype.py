@@ -23,12 +23,12 @@ class Map:
         else:
             self._from_file(filepath)
 
-        # Mainly for debugging.
-        self.border = pg.sprite.Sprite()
-        self.border.image = pg.Surface(self.rect.size)
-        self.border.rect = self.border.image.get_rect()
-        pg.draw.rect(self.border.image, RED, self.border.rect, 1)
-        self.border.image.set_colorkey(BLACK)
+        if __debug__:
+            self.border = pg.sprite.Sprite()
+            self.border.image = pg.Surface(self.rect.size)
+            self.border.rect = self.border.image.get_rect()
+            pg.draw.rect(self.border.image, RED, self.border.rect, 1)
+            self.border.image.set_colorkey(BLACK)
 
     def _from_file(self, filepath):
         with open(filepath) as f:
@@ -50,10 +50,9 @@ class Map:
     def _compute_block_collision_edges(self, map_data):
         block_dict = {tuple(data['loc']): data
                       for data in map_data['blocks']}
-        # TODO: This next bit is a little hacky right now...
         ramp_dict = {loc: None
                      for data in map_data['ramps']
-                     for loc in Ramp(**data).get_composite_tiles()}
+                     for loc in Ramp(**data).get_composite_tile_locations()}
 
         open_tile = lambda x, y: (x, y) not in block_dict and \
                                  (x, y) not in ramp_dict
@@ -133,11 +132,9 @@ class Player(pg.sprite.Sprite):
         for block in blocks:
             if self.rect.colliderect(block.rect):
                 if 'left' in block.collision_edges and disp[0] > 0:
-                    print('left')  # TODO: Debugging.
                     self.vx = 0
                     self.rect.right = block.rect.left
                 elif 'right' in block.collision_edges and disp[0] < 0:
-                    print('right')  # TODO: Debugging.
                     self.vx = 0
                     self.rect.left = block.rect.right
 
@@ -193,18 +190,18 @@ class Block(pg.sprite.Sprite):
         if surface_type is None:
             self.image.fill(WHITE)
 
-        # For debugging.
-        width, height = self.rect.size
-        if 'left' in self.collision_edges:
-            pg.draw.line(self.image, RED, (0, 0), (0, height-1))
-        if 'right' in self.collision_edges:
-            pg.draw.line(
-                self.image, RED, (width-1, 0), (width-1, height-1))
-        if 'top' in self.collision_edges:
-            pg.draw.line(self.image, RED, (0, 0), (width-1, 0))
-        if 'bottom' in self.collision_edges:
-            pg.draw.line(
-                self.image, RED, (0, height-1), (width-1, height-1))
+        if __debug__:
+            width, height = self.rect.size
+            if 'left' in self.collision_edges:
+                pg.draw.line(self.image, RED, (0, 0), (0, height-1))
+            if 'right' in self.collision_edges:
+                pg.draw.line(
+                    self.image, RED, (width-1, 0), (width-1, height-1))
+            if 'top' in self.collision_edges:
+                pg.draw.line(self.image, RED, (0, 0), (width-1, 0))
+            if 'bottom' in self.collision_edges:
+                pg.draw.line(
+                    self.image, RED, (0, height-1), (width-1, height-1))
 
 class Ramp(pg.sprite.Sprite):
     def __init__(self, loc, size, ramp_type, surface_type=None):
@@ -227,9 +224,9 @@ class Ramp(pg.sprite.Sprite):
                 points = ((0, height-1), (width-1, height-1), (width-1, 0))
                 pg.draw.polygon(self.image, WHITE, points)
 
-    # TODO: Just returns the tile positions for now, including tiles that don't
-    # necessarily overlap the ramp.
-    def get_composite_tiles(self):
+    # TODO: Returns locations of tiles that may not overlap the ramp image
+    # itself. Change this?
+    def get_composite_tile_locations(self):
         n_horz_tiles = int(self.rect.width / TILE_WIDTH)
         n_vert_tiles = int(self.rect.height / TILE_HEIGHT)
         x = int(self.rect.x / TILE_WIDTH)
@@ -251,24 +248,7 @@ if __name__ == '__main__':
     blocks = map.blocks
     ramps = map.ramps
 
-    # print(ramps[0].get_composite_tiles())
-
     viewport = Viewport((0, 0), screen.get_rect().size)
-
-    # player = Player((3, 4))
-    #
-    # blocks = []
-    # blocks.extend([Block((x, 18)) for x in range(25)])
-    # blocks.extend([Block((x, y)) for x in range(8, 19) for y in range(14, 18)])
-    # blocks.extend([Block((x, y)) for x in range(12, 19) for y in range(12, 14)])
-    #
-    # ramps = [
-    #     Ramp((4, 14), (4, 4), 'right_ramp'),
-    #     Ramp((8, 12), (4, 2), 'right_ramp'),
-    #     Ramp((12, 11), (3, 1), 'right_ramp'),
-    #     Ramp((15, 11), (4, 1), 'left_ramp'),
-    #     Ramp((19, 12), (4, 4), 'left_ramp')
-    # ]
 
     clock = pg.time.Clock()
 
@@ -331,7 +311,8 @@ if __name__ == '__main__':
 
         viewport.draw(screen, player)
 
-        viewport.draw(screen, map.border)
+        if __debug__:
+            viewport.draw(screen, map.border)
 
         pg.display.flip()
         clock.tick(FPS)
