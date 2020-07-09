@@ -226,19 +226,9 @@
             "collision_edges": null
         },
         {
-            "loc": [39, 13],
+            "loc": [36, 13],
             "surface_type": null,
-            "collision_edges": ["top"]
-        },
-        {
-            "loc": [40, 13],
-            "surface_type": null,
-            "collision_edges": ["top"]
-        },
-        {
-            "loc": [41, 13],
-            "surface_type": null,
-            "collision_edges": ["top"]
+            "collision_edges": null
         }
     ],
     "ramps": [
@@ -270,6 +260,18 @@
             "loc": [19, 12],
             "size": [7, 7],
             "ramp_type": "left_ramp",
+            "surface_type": null
+        },
+        {
+            "loc": [37, 13],
+            "size": [4, 4],
+            "ramp_type": "left_ramp",
+            "surface_type": null
+        },
+        {
+            "loc": [41, 15],
+            "size": [4, 2],
+            "ramp_type": "right_ramp",
             "surface_type": null
         }
     ],
