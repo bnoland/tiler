@@ -166,6 +166,8 @@ class Map:
                 texture_y = int(y_pos) % self.texture_size
                 y_pos += y_step
                 color = texture.get_at((texture_x, texture_y))
+                if side == 'y':
+                    color = (color[0] / 2, color[1] / 2, color[2] / 2, color[3])
                 buffer.set_at((x, y), color)
 
         surface.blit(buffer, (0, 0))
