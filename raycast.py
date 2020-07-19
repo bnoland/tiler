@@ -175,7 +175,26 @@ class Map:
                 texture_pixels //= 2
                 del texture_pixels  # Unlock the surface
 
+            # texture_pixels = pg.surfarray.array3d(texture_buffer)
+            # dim_factor = 1 / (wall_dist + 0.1)
+            # if dim_factor > 1:
+            #     dim_factor = 1
+            # texture_pixels = (texture_pixels * dim_factor).astype(int)
+            # pg.surfarray.blit_array(texture_buffer, texture_pixels)
+
+            dim_factor = 1 - 5 / (wall_dist + 0.1)
+            if dim_factor > 1:
+                dim_factor = 1
+            if dim_factor < 0:
+                dim_factor = 0
+            darken = pg.Surface(texture_buffer.get_size()).convert_alpha()
+            darken.fill((0, 0, 0, 255 * dim_factor))  # Darkness
+            # darken.fill((100, 100, 100, 255 * dim_factor))  # Fog
+
+            # surface.fill((100, 100, 100))
+
             surface.blit(texture_buffer, (x, y_start))
+            surface.blit(darken, (x, y_start))
 
     def draw(self, screen, player):
         size = 20
