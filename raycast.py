@@ -58,7 +58,13 @@ class Map:
             pg.image.load('marble_color.png').convert(),
             pg.image.load('cloud_color.png').convert()
         ]
+
         self.texture_size = 64  # Fixed for now.
+
+        self.texture_pixels = [
+            pg.PixelArray(texture)
+            for texture in self.textures
+        ]
 
     def is_empty_square(self, map_x, map_y):
         if map_x < 0 or map_x >= self.width:
@@ -77,7 +83,11 @@ class Map:
         width, height = surface.get_width(), surface.get_height()
 
         # TODO: Let the user of this method handle the buffer?
-        buffer = pg.Surface((width, height))
+        # buffer = pg.Surface((width, height))
+        # buffer_pixels = pg.PixelArray(buffer)
+
+        # TODO: Read more about pygame's PixelArray object.
+        surface_pixels = pg.PixelArray(surface)
 
         for x in range(width):
             camera_x = 2 * x / width - 1
@@ -158,6 +168,7 @@ class Map:
                 y_end = height - 1
 
             texture = self.textures[square-1]
+            texture_pixels = self.texture_pixels[square-1]
 
             y_step = self.texture_size / line_height
             # y_pos = (y_start - (height - line_height) / 2) * y_step
@@ -165,12 +176,15 @@ class Map:
             for y in range(y_start, y_end):
                 texture_y = int(y_pos) % self.texture_size
                 y_pos += y_step
-                color = texture.get_at((texture_x, texture_y))
+                color = texture_pixels[texture_x, texture_y]
+                color = texture.unmap_rgb(color)
                 if side == 'y':
                     color = (color[0] / 2, color[1] / 2, color[2] / 2, color[3])
-                buffer.set_at((x, y), color)
+                surface_pixels[x, y] = color
 
-        surface.blit(buffer, (0, 0))
+        surface_pixels.close()
+
+        # surface.blit(buffer, (0, 0))
 
     def draw(self, screen, player):
         size = 20
@@ -276,8 +290,6 @@ if __name__ == '__main__':
             elif event.type == pg.QUIT:
                 running = False
 
-        # screen.fill(BLACK)
-
         if player.turning_left:
             player.turn(-1 / (6 * math.pi))
         if player.turning_right:
@@ -292,8 +304,10 @@ if __name__ == '__main__':
 
         player.move(map)
 
+        screen.fill(BLACK)
+
         if showing_map:
-            screen.fill(BLACK)
+            # screen.fill(BLACK)
             map.draw(screen, player)
         else:
             map.raycast(screen, player.loc, player.dir, player.plane)
