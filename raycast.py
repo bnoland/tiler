@@ -27,11 +27,11 @@ class Map:
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,2,2,2,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1],
+            [1,0,0,0,0,0,2,2,2,2,2,0,0,0,0,2,0,2,0,2,0,0,0,1],
             [1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,3,0,0,0,3,0,0,0,1],
+            [1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,2,0,0,0,2,0,0,0,1],
             [1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,2,2,0,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1],
+            [1,0,0,0,0,0,2,2,0,2,2,0,0,0,0,2,0,2,0,2,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -39,18 +39,26 @@ class Map:
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,4,0,0,0,0,5,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,4,0,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,0,0,0,0,2,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         ]
 
         self.width = len(self.squares[0])
         self.height = len(self.squares)
+
+        # TODO: In general might want to do texture loading *outside* of the map
+        # class.
+        self.textures = [
+            pg.image.load('marble_color.png').convert(),
+            pg.image.load('cloud_color.png').convert()
+        ]
+        self.texture_size = 64  # Fixed for now.
 
     def is_empty_square(self, map_x, map_y):
         if map_x < 0 or map_x >= self.width:
@@ -59,8 +67,18 @@ class Map:
             return False
         return self.squares[map_x][map_y] == 0
 
+    def _square_color(self, square):
+        if square == 1:
+            return YELLOW
+        elif square == 2:
+            return BLUE
+
     def raycast(self, surface, loc, dir, plane):
         width, height = surface.get_width(), surface.get_height()
+
+        # TODO: Let the user of this method handle the buffer?
+        buffer = pg.Surface((width, height))
+
         for x in range(width):
             camera_x = 2 * x / width - 1
             ray_dir_x = dir[0] + camera_x * plane[0]
@@ -109,10 +127,21 @@ class Map:
                 if square > 0:
                     break
 
+            # Note: `texture_x' always satisfies 0 <= wall_x < self.texture_size
             if side == 'x':
                 wall_dist = (map_x - loc[0] + (1 - x_step) / 2) / ray_dir_x
+                wall_x = loc[1] + wall_dist * ray_dir_y
+                wall_x -= math.floor(wall_x)
+                texture_x = int(wall_x * self.texture_size)
+                if ray_dir_x > 0:
+                    texture_x = self.texture_size - texture_x - 1
             elif side == 'y':
                 wall_dist = (map_y - loc[1] + (1 - y_step) / 2) / ray_dir_y
+                wall_x = loc[0] + wall_dist * ray_dir_x
+                wall_x -= math.floor(wall_x)
+                texture_x = int(wall_x * self.texture_size)
+                if ray_dir_y < 0:
+                    texture_x = self.texture_size - texture_x - 1
             else:
                 # TODO: Error.
                 pass
@@ -128,27 +157,18 @@ class Map:
             if y_end >= height:
                 y_end = height - 1
 
-            color = self._square_color(square)
+            texture = self.textures[square-1]
 
-            if side == 'y':
-                color = (color[0] / 2, color[1] / 2, color[2] / 2)
+            y_step = self.texture_size / line_height
+            # y_pos = (y_start - (height - line_height) / 2) * y_step
+            y_pos = 0
+            for y in range(y_start, y_end):
+                texture_y = int(y_pos) % self.texture_size
+                y_pos += y_step
+                color = texture.get_at((texture_x, texture_y))
+                buffer.set_at((x, y), color)
 
-            pg.draw.line(screen, color, (x, y_start), (x, y_end))
-
-    # TODO: Doesn't need to be associated with any object. How to do this in
-    # Python?
-    def _square_color(self, square):
-        if square == 1:
-            color = RED
-        elif square == 2:
-            color = GREEN
-        elif square == 3:
-            color = BLUE
-        elif square == 4:
-            color = WHITE
-        else:
-            color = YELLOW
-        return color
+        surface.blit(buffer, (0, 0))
 
     def draw(self, screen, player):
         size = 20
@@ -159,9 +179,9 @@ class Map:
         player_x = round(player.loc[0] * size - width // 2)
         player_y = round(player.loc[1] * size - height // 2)
 
-        for map_y, row in enumerate(self.squares):
-            for map_x, square in enumerate(row):
-                square_rect = pg.Rect(map_y * size, map_x * size, size, size)
+        for i, row in enumerate(self.squares):
+            for j, square in enumerate(row):
+                square_rect = pg.Rect(i * size, j * size, size, size)
                 square_rect.move_ip(-player_x, -player_y)
                 if square > 0:
                     color = self._square_color(square)
@@ -214,13 +234,15 @@ if __name__ == '__main__':
     pg.init()
 
     SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+    # SCREEN_WIDTH, SCREEN_HEIGHT = 320, 200
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     FPS = 60
     clock = pg.time.Clock()
 
     map = Map()
-    player = Player([2, 2], [1, 1], 66 / (2 * math.pi))
+    # player = Player([2, 2], [1, 1], 66 / (2 * math.pi))
+    player = Player([10, 2], [1, 1])
 
     showing_map = False
 
@@ -252,7 +274,7 @@ if __name__ == '__main__':
             elif event.type == pg.QUIT:
                 running = False
 
-        screen.fill(BLACK)
+        # screen.fill(BLACK)
 
         if player.turning_left:
             player.turn(-1 / (6 * math.pi))
@@ -269,6 +291,7 @@ if __name__ == '__main__':
         player.move(map)
 
         if showing_map:
+            screen.fill(BLACK)
             map.draw(screen, player)
         else:
             map.raycast(screen, player.loc, player.dir, player.plane)

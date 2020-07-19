@@ -117,7 +117,7 @@ def wavy(size):
 if __name__ == '__main__':
     # Demo using matplotlib colormaps.
 
-    size = 256
+    size = 64
 
     copper = cm.get_cmap('copper', 256)
     image_buffer = (copper(marble_2d(size) / 255) * 255).astype(np.uint8)
