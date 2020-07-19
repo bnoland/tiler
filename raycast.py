@@ -61,10 +61,10 @@ class Map:
 
         self.texture_size = 64  # Fixed for now.
 
-        self.texture_pixels = [
-            pg.PixelArray(texture)
-            for texture in self.textures
-        ]
+        # self.texture_pixels = [
+        #     pg.PixelArray(texture)
+        #     for texture in self.textures
+        # ]
 
     def is_empty_square(self, map_x, map_y):
         if map_x < 0 or map_x >= self.width:
@@ -81,13 +81,6 @@ class Map:
 
     def raycast(self, surface, loc, dir, plane):
         width, height = surface.get_width(), surface.get_height()
-
-        # TODO: Let the user of this method handle the buffer?
-        # buffer = pg.Surface((width, height))
-        # buffer_pixels = pg.PixelArray(buffer)
-
-        # TODO: Read more about pygame's PixelArray object.
-        surface_pixels = pg.PixelArray(surface)
 
         for x in range(width):
             camera_x = 2 * x / width - 1
@@ -163,28 +156,26 @@ class Map:
             if y_start < 0:
                 y_start = 0
 
-            y_end = int((height + line_height) / 2)
-            if y_end >= height:
-                y_end = height - 1
+            # y_end = int((height + line_height) / 2)
+            # if y_end >= height:
+            #     y_end = height - 1
 
             texture = self.textures[square-1]
-            texture_pixels = self.texture_pixels[square-1]
 
-            y_step = self.texture_size / line_height
-            # y_pos = (y_start - (height - line_height) / 2) * y_step
-            y_pos = 0
-            for y in range(y_start, y_end):
-                texture_y = int(y_pos) % self.texture_size
-                y_pos += y_step
-                color = texture_pixels[texture_x, texture_y]
-                color = texture.unmap_rgb(color)
-                if side == 'y':
-                    color = (color[0] / 2, color[1] / 2, color[2] / 2, color[3])
-                surface_pixels[x, y] = color
+            texture_buffer = pg.Surface(texture.get_size())
+            texture_buffer.blit(
+                texture, (0, 0), (texture_x, 0, 1, self.texture_size))
+            texture_buffer = pg.transform.scale(
+                texture_buffer, (1, round(line_height)))
 
-        surface_pixels.close()
+            if side == 'y':
+                # TODO: Need to ensure that `texture_buffer' has underlying
+                # 24-bit or 32-bit pixel format (see the docs for pixels3d() ).
+                texture_pixels = pg.surfarray.pixels3d(texture_buffer)
+                texture_pixels //= 2
+                del texture_pixels  # Unlock the surface
 
-        # surface.blit(buffer, (0, 0))
+            surface.blit(texture_buffer, (x, y_start))
 
     def draw(self, screen, player):
         size = 20
@@ -307,7 +298,6 @@ if __name__ == '__main__':
         screen.fill(BLACK)
 
         if showing_map:
-            # screen.fill(BLACK)
             map.draw(screen, player)
         else:
             map.raycast(screen, player.loc, player.dir, player.plane)
