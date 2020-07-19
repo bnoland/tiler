@@ -61,11 +61,6 @@ class Map:
 
         self.texture_size = 64  # Fixed for now.
 
-        # self.texture_pixels = [
-        #     pg.PixelArray(texture)
-        #     for texture in self.textures
-        # ]
-
     def is_empty_square(self, map_x, map_y):
         if map_x < 0 or map_x >= self.width:
             return False
@@ -73,6 +68,7 @@ class Map:
             return False
         return self.squares[map_x][map_y] == 0
 
+    # TODO: How to associate this with the *class* instead of the *object*?
     def _square_color(self, square):
         if square == 1:
             return YELLOW
@@ -190,8 +186,6 @@ class Map:
             darken = pg.Surface(texture_buffer.get_size()).convert_alpha()
             darken.fill((0, 0, 0, 255 * dim_factor))  # Darkness
             # darken.fill((100, 100, 100, 255 * dim_factor))  # Fog
-
-            # surface.fill((100, 100, 100))
 
             surface.blit(texture_buffer, (x, y_start))
             surface.blit(darken, (x, y_start))
