@@ -61,6 +61,62 @@ class Map:
 
         self.texture_size = 64  # Fixed for now.
 
+        self.lighting = self.compute_lighting((2, 2))
+        # print(self.lighting)
+
+    # Hacky lighting stuff...
+    def compute_lighting(self, light_loc):
+        lighting = {}
+        for i in range(0, 360*100):
+            angle = i / (200 * math.pi)
+            ray_dir = (math.cos(angle), math.sin(angle))
+
+            map_x, map_y, wall_dist, side, texture_x = \
+                self.cast_ray(light_loc, ray_dir)
+
+            if not (map_x, map_y) in lighting:
+                # Entry contains lists of texture coordinates hit by light rays
+                # on each wall. Initialize it if it doesn't exist yet for this
+                # map location.
+                lighting[(map_x, map_y)] = {
+                    'left': set(),
+                    'right': set(),
+                    'top': set(),
+                    'bottom': set()
+                }
+
+            if side == 'x':
+                if ray_dir[0] > 0:
+                    # lighting[(map_x, map_y)]['left'].append({
+                    #     'texture_x': texture_x,
+                    #     'wall_dist': wall_dist
+                    # })
+                    lighting[(map_x, map_y)]['left'].add(texture_x)
+                else:
+                    # lighting[(map_x, map_y)]['right'].append({
+                    #     'texture_x': texture_x,
+                    #     'wall_dist': wall_dist
+                    # })
+                    lighting[(map_x, map_y)]['right'].add(texture_x)
+            elif side == 'y':
+                if ray_dir[1] > 0:
+                    # lighting[(map_x, map_y)]['top'].append({
+                    #     'texture_x': texture_x,
+                    #     'wall_dist': wall_dist
+                    # })
+                    lighting[(map_x, map_y)]['top'].add(texture_x)
+                else:
+                    # lighting[(map_x, map_y)]['bottom'].append({
+                    #     'texture_x': texture_x,
+                    #     'wall_dist': wall_dist
+                    # })
+                    lighting[(map_x, map_y)]['bottom'].add(texture_x)
+            else:
+                # TODO: Error.
+                pass
+
+        return lighting
+
     def is_empty_square(self, map_x, map_y):
         if map_x < 0 or map_x >= self.width:
             return False
@@ -75,7 +131,72 @@ class Map:
         elif square == 2:
             return BLUE
 
-    def raycast(self, surface, loc, dir, plane):
+    def cast_ray(self, start_loc, ray_dir):
+        if ray_dir[1] == 0:
+            x_rate = 0
+        elif ray_dir[0] == 0:
+            x_rate = 1
+        else:
+            x_rate = abs(1 / ray_dir[0])
+
+        if ray_dir[0] == 0:
+            y_rate = 0
+        elif ray_dir[1] == 0:
+            y_rate = 1
+        else:
+            y_rate = abs(1 / ray_dir[1])
+
+        map_x, map_y = int(start_loc[0]), int(start_loc[1])
+        if ray_dir[0] < 0:
+            x_offset = (start_loc[0] - map_x) * x_rate
+            x_step = -1
+        else:
+            x_offset = ((map_x + 1) - start_loc[0]) * x_rate
+            x_step = 1
+
+        if ray_dir[1] < 0:
+            y_offset = (start_loc[1] - map_y) * y_rate
+            y_step = -1
+        else:
+            y_offset = ((map_y + 1) - start_loc[1]) * y_rate
+            y_step = 1
+
+        while True:
+            if x_offset < y_offset:
+                x_offset += x_rate
+                map_x += x_step
+                side = 'x'
+            else:
+                y_offset += y_rate
+                map_y += y_step
+                side = 'y'
+
+            square = self.squares[map_x][map_y]
+            if square > 0:
+                break
+
+        # Note: `texture_x' always satisfies 0 <= wall_x < self.texture_size
+        if side == 'x':
+            wall_dist = (map_x - start_loc[0] + (1 - x_step) / 2) / ray_dir[0]
+            wall_x = start_loc[1] + wall_dist * ray_dir[1]
+            wall_x -= math.floor(wall_x)
+            texture_x = int(wall_x * self.texture_size)
+            if ray_dir[0] > 0:
+                texture_x = self.texture_size - texture_x - 1
+        elif side == 'y':
+            wall_dist = (map_y - start_loc[1] + (1 - y_step) / 2) / ray_dir[1]
+            wall_x = start_loc[0] + wall_dist * ray_dir[0]
+            wall_x -= math.floor(wall_x)
+            texture_x = int(wall_x * self.texture_size)
+            if ray_dir[1] < 0:
+                texture_x = self.texture_size - texture_x - 1
+        else:
+            # TODO: Error.
+            pass
+
+        return (map_x, map_y, wall_dist, side, texture_x)
+
+    def render(self, surface, loc, dir, plane):
         width, height = surface.get_width(), surface.get_height()
 
         for x in range(width):
@@ -184,10 +305,32 @@ class Map:
             if dim_factor < 0:
                 dim_factor = 0
             darken = pg.Surface(texture_buffer.get_size()).convert_alpha()
-            darken.fill((0, 0, 0, 255 * dim_factor))  # Darkness
+            # darken.fill((0, 0, 0, 255 * dim_factor))  # Darkness
             # darken.fill((100, 100, 100, 255 * dim_factor))  # Fog
 
             surface.blit(texture_buffer, (x, y_start))
+            # surface.blit(darken, (x, y_start))
+
+            # Super hacky lighting code...
+            if (map_x, map_y) in self.lighting:
+                if side == 'x':
+                    if ray_dir_x > 0:
+                        key = 'left'
+                    else:
+                        key = 'right'
+                elif side == 'y':
+                    if ray_dir_y > 0:
+                        key = 'top'
+                    else:
+                        key = 'bottom'
+                else:
+                    # TODO: Error.
+                    pass
+
+                if texture_x in self.lighting[(map_x, map_y)][key]:
+                    dim_factor /= 10
+
+            darken.fill((0, 0, 0, 255 * dim_factor))  # Darkness
             surface.blit(darken, (x, y_start))
 
     def draw(self, screen, player):
@@ -199,13 +342,15 @@ class Map:
         player_x = round(player.loc[0] * size - width // 2)
         player_y = round(player.loc[1] * size - height // 2)
 
-        for i, row in enumerate(self.squares):
-            for j, square in enumerate(row):
-                square_rect = pg.Rect(i * size, j * size, size, size)
+        for map_x, row in enumerate(self.squares):
+            for map_y, square in enumerate(row):
+                square_rect = pg.Rect(map_x * size, map_y * size, size, size)
                 square_rect.move_ip(-player_x, -player_y)
                 if square > 0:
                     color = self._square_color(square)
                     pg.draw.rect(screen, color, square_rect)
+                if (map_x, map_y) in self.lighting.keys():
+                    pg.draw.rect(screen, GREEN, square_rect)
 
         start = (width // 2, height // 2)
         end = (
@@ -313,7 +458,7 @@ if __name__ == '__main__':
         if showing_map:
             map.draw(screen, player)
         else:
-            map.raycast(screen, player.loc, player.dir, player.plane)
+            map.render(screen, player.loc, player.dir, player.plane)
 
         pg.display.flip()
         clock.tick(FPS)
