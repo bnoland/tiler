@@ -291,15 +291,21 @@ class Player:
     def move(self, map):
         disp = (self.dir[0] * self.velocity, self.dir[1] * self.velocity)
 
-        map_x = int(self.loc[0] + disp[0])
-        map_y = int(self.loc[1])
-        if map.is_empty_square(map_x, map_y):
-            self.loc[0] += disp[0]
+        gap_size = 0.15
 
-        map_x = int(self.loc[0])
-        map_y = int(self.loc[1] + disp[1])
-        if map.is_empty_square(map_x, map_y):
-            self.loc[1] += disp[1]
+        if disp[0] != 0:
+            gap_x = math.copysign(gap_size, disp[0])
+            map_x = int(self.loc[0] + disp[0] + gap_x)
+            map_y = int(self.loc[1])
+            if map.is_empty_square(map_x, map_y):
+                self.loc[0] += disp[0]
+
+        if disp[1] != 0:
+            gap_y = math.copysign(gap_size, disp[1])
+            map_x = int(self.loc[0])
+            map_y = int(self.loc[1] + disp[1] + gap_y)
+            if map.is_empty_square(map_x, map_y):
+                self.loc[1] += disp[1]
 
     def turn(self, angle):
         self.dir = rotate(self.dir, angle)
