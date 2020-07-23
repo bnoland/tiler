@@ -9,6 +9,8 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
 YELLOW = (255, 255, 0)
+BROWN = (139, 69, 19)
+CYAN = (0, 255, 255)
 
 def rotate(v, theta):
     wx = math.cos(theta) * v[0] - math.sin(theta) * v[1]
@@ -112,9 +114,11 @@ class Map:
     # TODO: How to associate this with the *class* instead of the *object*?
     def _square_color(self, square):
         if square == 1:
-            return YELLOW
+            return BROWN
         elif square == 2:
-            return BLUE
+            return CYAN
+        elif square == -1:
+            return YELLOW
 
     def cast_ray(self, start_loc, ray_dir):
         if ray_dir[1] == 0:
@@ -242,7 +246,7 @@ class Map:
             darken.fill((0, 0, 0, 255 * dim_factor))  # Darkness
             surface.blit(darken, (x, y_start))
 
-    def draw(self, screen, player):
+    def draw(self, screen, player, show_lighting=False):
         size = 20
 
         width, height = screen.get_width(), screen.get_height()
@@ -253,16 +257,23 @@ class Map:
 
         for map_x, row in enumerate(self.squares):
             for map_y, square in enumerate(row):
+                if square == 0:
+                    continue
+
+                if square == -1 and not show_lighting:
+                    continue
+
                 square_rect = pg.Rect(map_x * size, map_y * size, size, size)
                 square_rect.move_ip(-player_x, -player_y)
-                if square > 0:
-                    color = self._square_color(square)
-                    pg.draw.rect(screen, color, square_rect)
 
-                # Indicate squares affected by lighting.
-                for lighting in self.lighting_list:
-                    if (map_x, map_y) in lighting.keys():
-                        pg.draw.rect(screen, GREEN, square_rect)
+                color = self._square_color(square)
+                pg.draw.rect(screen, color, square_rect)
+
+                if show_lighting:
+                    # Indicate if this square is affected by lighting.
+                    for lighting in self.lighting_list:
+                        if (map_x, map_y) in lighting.keys():
+                            pg.draw.rect(screen, GREEN, square_rect)
 
         start = (width // 2, height // 2)
         end = (
@@ -373,7 +384,7 @@ if __name__ == '__main__':
         screen.fill(BLACK)
 
         if showing_map:
-            map.draw(screen, player)
+            map.draw(screen, player, show_lighting=True)
         else:
             map.render(screen, player.loc, player.dir, player.plane)
 
