@@ -291,17 +291,31 @@ class Player:
         self.plane[0] *= abs(math.tan(self.fov / 2))
         self.plane[1] *= abs(math.tan(self.fov / 2))
 
-        self.turning_left = False
-        self.turning_right = False
-
         self.moving_forward = False
         self.moving_backward = False
 
-        self.velocity = 0
+        # Used to indicate either strafing or turning, depending on context.
+        self.moving_left = False
+        self.moving_right = False
 
-    def move(self, map):
-        disp = (self.dir[0] * self.velocity, self.dir[1] * self.velocity)
+        self.walk_velocity = 0
+        self.strafe_velocity = 0
 
+    def walk(self, map):
+        disp = (
+            self.dir[0] * self.walk_velocity,
+            self.dir[1] * self.walk_velocity
+        )
+        self._move(map, disp)
+
+    def strafe(self, map):
+        disp = (
+            self.plane[0] * self.strafe_velocity,
+            self.plane[1] * self.strafe_velocity
+        )
+        self._move(map, disp)
+
+    def _move(self, map, disp):
         gap_size = 0.15
 
         if disp[0] != 0:
@@ -346,9 +360,9 @@ if __name__ == '__main__':
                 if event.key == pg.K_ESCAPE:
                     running = False
                 elif event.key == pg.K_LEFT:
-                    player.turning_left = True
+                    player.moving_left = True
                 elif event.key == pg.K_RIGHT:
-                    player.turning_right = True
+                    player.moving_right = True
                 elif event.key == pg.K_UP:
                     player.moving_forward = True
                 elif event.key == pg.K_DOWN:
@@ -357,9 +371,9 @@ if __name__ == '__main__':
                     showing_map = not showing_map
             elif event.type == pg.KEYUP:
                 if event.key == pg.K_LEFT:
-                    player.turning_left = False
+                    player.moving_left = False
                 elif event.key == pg.K_RIGHT:
-                    player.turning_right = False
+                    player.moving_right = False
                 elif event.key == pg.K_UP:
                     player.moving_forward = False
                 elif event.key == pg.K_DOWN:
@@ -367,19 +381,27 @@ if __name__ == '__main__':
             elif event.type == pg.QUIT:
                 running = False
 
-        if player.turning_left:
-            player.turn(-1 / (6 * math.pi))
-        if player.turning_right:
-            player.turn(1 / (6 * math.pi))
+        player.walk_velocity -= 0.5 * player.walk_velocity
+        if player.moving_forward:
+            player.walk_velocity = 0.1
+        elif player.moving_backward:
+            player.walk_velocity = -0.1
 
-        player.velocity -= 0.5 * player.velocity
-        if player.moving_forward or player.moving_backward:
-            if player.moving_forward:
-                player.velocity = 0.1
-            elif player.moving_backward:
-                player.velocity = -0.1
+        player.strafe_velocity -= 0.5 * player.strafe_velocity
 
-        player.move(map)
+        if pg.key.get_mods() & pg.KMOD_SHIFT:
+            if player.moving_right:
+                player.strafe_velocity = 0.1
+            elif player.moving_left:
+                player.strafe_velocity = -0.1
+        else:
+            if player.moving_left:
+                player.turn(-1 / (6 * math.pi))
+            if player.moving_right:
+                player.turn(1 / (6 * math.pi))
+
+        player.walk(map)
+        player.strafe(map)
 
         screen.fill(BLACK)
 
