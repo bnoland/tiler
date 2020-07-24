@@ -198,30 +198,15 @@ class Map:
             # + small value in denominator to prevent division by zero
             line_height = int(height / (wall_dist + 0.1))
 
-            y_start = int((height - line_height) / 2)
-            if y_start < 0:
-                y_start = 0
-
-            # y_end = int((height + line_height) / 2)
-            # if y_end >= height:
-            #     y_end = height - 1
-
             square = square = self.squares[map_x][map_y]
             texture = self.textures[square-1]
 
-            # TODO: Define `texture_y' properly so as to prevent distortion.
-            step = self.texture_size / line_height
-            texture_y = int((y_start - (height - line_height) / 2) * step + step)
-
-            texture_buffer = pg.Surface(texture.get_size())
-            # texture_buffer.blit(
-            #     texture, (0, 0), (texture_x, 0, 1, self.texture_size))
+            # Compute a scaled strip of the texture.
+            texture_buffer = pg.Surface((1, self.texture_size))
             texture_buffer.blit(
-                texture, (0, 0), (texture_x, texture_y, 1, self.texture_size))
+                texture, (0, 0), (texture_x, 0, 1, self.texture_size))
             texture_buffer = pg.transform.scale(
-                texture_buffer, (1, round(line_height)))
-
-            surface.blit(texture_buffer, (x, y_start))
+                texture_buffer, (1, line_height))
 
             orig_dim_factor = 1 - 1 / (wall_dist + 0.1)
             dim_factor = orig_dim_factor
@@ -254,6 +239,9 @@ class Map:
 
             darken = pg.Surface(texture_buffer.get_size()).convert_alpha()
             darken.fill((0, 0, 0, 255 * dim_factor))  # Darkness
+
+            y_start = height // 2 - line_height // 2
+            surface.blit(texture_buffer, (x, y_start))
             surface.blit(darken, (x, y_start))
 
     def draw(self, screen, player, show_lighting=False):
