@@ -119,16 +119,20 @@ if __name__ == '__main__':
 
     size = 64
 
-    copper = cm.get_cmap('copper', 256)
-    image_buffer = (copper(marble_2d(size) / 255) * 255).astype(np.uint8)
-    imwrite('marble_color.png', image_buffer, format='png')
+    YlGn = cm.get_cmap('YlGn', 256)
+    image_buffer = (YlGn(marble_2d(size) / 255) * 255).astype(np.uint8)
+    imwrite('marble_color2.png', image_buffer, format='png')
 
-    vals = np.ones([256, 4])
-    vals[:, 0] = np.linspace(135/255, 1, 256)
-    vals[:, 1] = np.linspace(206/255, 1, 256)
-    vals[:, 2] = np.linspace(235/255, 1, 256)
-    cmp = ListedColormap(vals)
-    image_buffer = (cmp(cloud_2d(size) / 255) * 255).astype(np.uint8)
-    imwrite('cloud_color.png', image_buffer, format='png')
+    # copper = cm.get_cmap('copper', 256)
+    # image_buffer = (copper(marble_2d(size) / 255) * 255).astype(np.uint8)
+    # imwrite('marble_color.png', image_buffer, format='png')
+
+    # vals = np.ones([256, 4])
+    # vals[:, 0] = np.linspace(135/255, 1, 256)
+    # vals[:, 1] = np.linspace(206/255, 1, 256)
+    # vals[:, 2] = np.linspace(235/255, 1, 256)
+    # cmp = ListedColormap(vals)
+    # image_buffer = (cmp(cloud_2d(size) / 255) * 255).astype(np.uint8)
+    # imwrite('cloud_color.png', image_buffer, format='png')
 
     # mimsave('wavy.gif', list(wavy(size)), fps=60)

@@ -58,7 +58,8 @@ class Map:
         # class.
         self.textures = [
             pg.image.load('marble_color.png').convert(),
-            pg.image.load('cloud_color.png').convert()
+            pg.image.load('cloud_color.png').convert(),
+            pg.image.load('marble_color2.png').convert()
         ]
 
         self.texture_size = 64  # Fixed for now.
@@ -182,7 +183,38 @@ class Map:
 
         return (map_x, map_y, wall_dist, side, texture_x)
 
-    def render(self, surface, loc, dir, plane):
+    def render_floor(self, surface, loc, dir, plane):
+        width, height = surface.get_width(), surface.get_height()
+        loc_z = height // 2  # Fixed for now.
+
+        floor_texture = self.textures[2]
+
+        for y in range(height // 2 + 1, height):
+            p = y - height // 2  # Relative to horizon for now.
+            hit_dist = loc_z / p
+
+            ray_dir_left = (dir[0] - plane[0], dir[1] - plane[1])
+            ray_dir_right = (dir[0] + plane[0], dir[1] + plane[1])
+
+            x_step = (ray_dir_right[0] - ray_dir_left[0]) * hit_dist / width
+            y_step = (ray_dir_right[1] - ray_dir_left[1]) * hit_dist / width
+
+            floor_x = loc[0] + ray_dir_left[0] * hit_dist
+            floor_y = loc[1] + ray_dir_left[1] * hit_dist
+
+            for x in range(width):
+                cell_x, cell_y = int(floor_x), int(floor_y)
+                size = self.texture_size
+                texture_x = int((floor_x - cell_x) * size) % size
+                texture_y = int((floor_y - cell_y) * size) % size
+
+                floor_x += x_step
+                floor_y += y_step
+
+                color = floor_texture.get_at((texture_x, texture_y))
+                surface.set_at((x, y), color)
+
+    def render_walls(self, surface, loc, dir, plane):
         width, height = surface.get_width(), surface.get_height()
 
         for x in range(width):
@@ -198,7 +230,7 @@ class Map:
             # + small value in denominator to prevent division by zero
             line_height = int(height / (wall_dist + 0.1))
 
-            square = square = self.squares[map_x][map_y]
+            square = self.squares[map_x][map_y]
             texture = self.textures[square-1]
 
             # Compute a scaled strip of the texture.
@@ -314,6 +346,9 @@ class Player:
         self._move(map, disp)
 
     def _move(self, map, disp):
+        # TODO: May want to do collision detection using a circle around the
+        # player rather that doing it axis-wise.
+
         gap_size = 0.15
 
         if disp[0] != 0:
@@ -406,7 +441,8 @@ if __name__ == '__main__':
         if showing_map:
             map.draw(screen, player, show_lighting=True)
         else:
-            map.render(screen, player.loc, player.dir, player.plane)
+            map.render_floor(screen, player.loc, player.dir, player.plane)
+            map.render_walls(screen, player.loc, player.dir, player.plane)
 
         pg.display.flip()
         clock.tick(FPS)
