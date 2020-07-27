@@ -189,6 +189,9 @@ class Map:
 
         floor_texture = self.textures[2]
 
+        surface_pixels = pg.surfarray.pixels3d(surface)
+        texture_pixels = pg.surfarray.pixels3d(floor_texture)
+
         for y in range(height // 2 + 1, height):
             p = y - height // 2  # Relative to horizon for now.
             hit_dist = loc_z / p
@@ -203,18 +206,25 @@ class Map:
             floor_y = loc[1] + ray_dir_left[1] * hit_dist
 
             for x in range(width):
-                map_x = int(floor_x)
-                map_y = int(floor_y)
-                # if self.is_empty_square(map_x, map_y):
-                if map_x >= 0 and map_x < self.width and \
-                   map_y >= 0 and map_y < self.height:
-                    # if floor_x < map_x: print('here')
-                    size = self.texture_size
-                    texture_x = int((floor_x - map_x) * size) % size
-                    texture_y = int((floor_y - map_y) * size) % size
+                if floor_x >= self.width or floor_y >= self.height:
+                    break
 
-                    color = floor_texture.get_at((texture_x, texture_y))
-                    surface.set_at((x, y), color)
+                # if floor_x >= 0 and floor_x < self.width and \
+                #    floor_y >= 0 and floor_y < self.height:
+                if floor_x >= 0 and floor_y >= 0:
+                    map_x = int(floor_x)
+                    map_y = int(floor_y)
+
+                    size = self.texture_size
+                    # texture_x = int((floor_x - map_x) * size) % size
+                    # texture_y = int((floor_y - map_y) * size) % size
+                    texture_x = int((floor_x - map_x) * size)
+                    texture_y = int((floor_y - map_y) * size)
+
+                    # color = floor_texture.get_at((texture_x, texture_y))
+                    # surface.set_at((x, y), color)
+                    color = texture_pixels[texture_x, texture_y]
+                    surface_pixels[x, y] = color
 
                 floor_x += x_step
                 floor_y += y_step
@@ -427,6 +437,9 @@ if __name__ == '__main__':
 
         player.strafe_velocity -= 0.5 * player.strafe_velocity
 
+        # TODO: Issue with strafing while moving forward when using alt key for
+        # strafing. Why?
+        # if pg.key.get_mods() & pg.KMOD_ALT:
         if pg.key.get_mods() & pg.KMOD_SHIFT:
             if player.moving_right:
                 player.strafe_velocity = 0.1
