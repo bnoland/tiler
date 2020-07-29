@@ -206,12 +206,8 @@ class Map:
             floor_y = loc[1] + ray_dir_left[1] * hit_dist
 
             for x in range(width):
-                if floor_x >= self.width or floor_y >= self.height:
-                    break
-
-                # if floor_x >= 0 and floor_x < self.width and \
-                #    floor_y >= 0 and floor_y < self.height:
-                if floor_x >= 0 and floor_y >= 0:
+                if floor_x >= 0 and floor_x < self.width and \
+                   floor_y >= 0 and floor_y < self.height:
                     map_x = int(floor_x)
                     map_y = int(floor_y)
 
@@ -390,6 +386,7 @@ if __name__ == '__main__':
     pg.init()
 
     SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+    # SCREEN_WIDTH, SCREEN_HEIGHT = 320, 200
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     FPS = 60
@@ -460,7 +457,7 @@ if __name__ == '__main__':
             map.draw(screen, player, show_lighting=True)
         else:
             map.render_floor(screen, player.loc, player.dir, player.plane)
-            # map.render_walls(screen, player.loc, player.dir, player.plane)
+            map.render_walls(screen, player.loc, player.dir, player.plane)
 
         pg.display.flip()
         clock.tick(FPS)
