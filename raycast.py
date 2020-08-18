@@ -71,6 +71,7 @@ class Map:
             if square == -1
         ]
 
+    # TODO: Floor lighting?
     def compute_lighting(self, light_loc):
         lighting = {}
         for i in range(0, 360*100):
@@ -182,6 +183,15 @@ class Map:
                 texture_x = self.texture_size - texture_x - 1
 
         return (map_x, map_y, wall_dist, side, texture_x)
+
+    # Simple distance-shaded floor.
+    def render_floor_simple(self, surface):
+        width, height = surface.get_width(), surface.get_height()
+        for y in range(height // 2, height):
+            dim_factor = 1 - (height // 2) / y
+            # color = (100 * dim_factor, 100 * dim_factor, 100 * dim_factor)
+            color = (100 * dim_factor, 0, 0)
+            pg.draw.line(surface, color, (0, y), (width, y))
 
     def render_floor(self, surface, loc, dir, plane):
         width, height = surface.get_width(), surface.get_height()
@@ -393,7 +403,7 @@ if __name__ == '__main__':
     clock = pg.time.Clock()
 
     map = Map()
-    # player = Player([2, 2], [1, 1], 66 / (2 * math.pi))
+    # player = Player([10, 2], [1, 1], 66 / (2 * math.pi))
     player = Player([10, 2], [1, 1])
 
     showing_map = False
@@ -456,7 +466,8 @@ if __name__ == '__main__':
         if showing_map:
             map.draw(screen, player, show_lighting=True)
         else:
-            map.render_floor(screen, player.loc, player.dir, player.plane)
+            # map.render_floor(screen, player.loc, player.dir, player.plane)
+            map.render_floor_simple(screen)
             map.render_walls(screen, player.loc, player.dir, player.plane)
 
         pg.display.flip()
