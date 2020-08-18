@@ -248,11 +248,17 @@ class Map:
             map_x, map_y, wall_dist, side, texture_x = \
                 self.cast_ray(loc, ray_dir)
 
-            # + small value in denominator to prevent division by zero
-            line_height = int(height / (wall_dist + 0.1))
-
             square = self.squares[map_x][map_y]
             texture = self.textures[square-1]
+
+            # + small value in denominator to prevent division by zero
+            if square == 1:
+                line_height = int(height / (wall_dist + 0.1))
+                y_start = height // 2 - line_height // 2
+            elif square == 2:
+                temp = int(height / (wall_dist + 0.1))
+                line_height = temp * 3
+                y_start = height // 2 + temp // 2 - line_height
 
             # Compute a scaled strip of the texture.
             texture_buffer = pg.Surface((1, self.texture_size))
@@ -293,7 +299,7 @@ class Map:
             darken = pg.Surface(texture_buffer.get_size()).convert_alpha()
             darken.fill((0, 0, 0, 255 * dim_factor))  # Darkness
 
-            y_start = height // 2 - line_height // 2
+            # y_start = height // 2 - line_height // 2
             surface.blit(texture_buffer, (x, y_start))
             surface.blit(darken, (x, y_start))
 
